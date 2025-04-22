@@ -1,23 +1,26 @@
 from core.gestures import GestureDetector
 from core.mappings import get_button_for_gesture
-from ui.visualizer import ButtonVisualizer
+from web.server import run_server, set_web_status
 import cv2
+import threading
 
 cap = cv2.VideoCapture(0)
 detector = GestureDetector()
-ui = ButtonVisualizer()
 
-ui.set_status("Calibrate: Hold rest position...")
+# Start web server in background
+threading.Thread(target=run_server, daemon=True).start()
+
+set_web_status("Calibrate: Hold rest position...")
 while True:
     ret, frame = cap.read()
     if not ret:
         continue
     if detector.calibrate(frame):
-        ui.set_status("Calibration complete!")
+        set_web_status("Calibration complete!")
         break
 
 gesture_active = False
-ui.set_status("Start gesture detection")
+set_web_status("Start gesture detection")
 
 while True:
     ret, frame = cap.read()
@@ -28,19 +31,16 @@ while True:
     if elbow_raised and not gesture_active:
         button = get_button_for_gesture("elbow_raised")
         if button:
-            ui.set_button(button)
+            set_web_status(f"Pressed: {button.upper()}")
         gesture_active = True
 
     elif not elbow_raised and gesture_active:
         gesture_active = False
-        ui.set_status("Waiting for gesture...")
+        set_web_status("Waiting for gesture...")
 
     cv2.imshow("Gesture Detection", frame)
-    ui.update()
-
     if cv2.waitKey(5) & 0xFF == 27:
         break
 
 cap.release()
 cv2.destroyAllWindows()
-ui.close()
