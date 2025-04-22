@@ -1,0 +1,58 @@
+{
+    "core": [
+      "__init__.py",
+      "gestures.py",
+      "mappings.py",
+      "controller.py",
+      "threshold_manager.py"
+    ],
+    "ui": [
+      "__init__.py",
+      "visualizer.py",
+      "wifi_setup.py"
+    ],
+    "utils": [
+      "__init__.py",
+      "video_capture.py",
+      "logger.py"
+    ],
+    "config": [
+      "settings.yaml",
+      "thresholds.yaml"
+    ],
+    "logs": [],
+    "captures": [],
+    "models": [],
+    "output": [],
+    "web": [
+      "__init__.py",
+      "server.py"
+    ],
+    "web/templates": [],
+    "web/static": [],
+    "remote": [
+      "__init__.py",
+      "psrc_runner.py",
+      "input_bridge.py",
+      "controller_bridge.py",
+      "auth.json"
+    ],
+    "services": [
+      "playable.service",
+      "wifi-connect.service"
+    ],
+    "docs": [
+      "architecture.md",
+      "pairing_and_input.md",
+      "deployment.md",
+      "customization.md",
+      "README.md"
+    ],
+    "root_files": [
+      "main.py",
+      "requirements.txt",
+      "install.sh",
+      "README.md"
+    ]
+  }
+  
