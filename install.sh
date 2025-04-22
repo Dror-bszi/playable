@@ -9,9 +9,9 @@ echo "🔧 Setting up PlayAble environment..."
 sudo apt update
 sudo apt install -y python3 python3-pip libatlas-base-dev libjpeg-dev
 
-# Install Python requirements globally
+# Install Python requirements globally from requirements.txt
 pip3 install --upgrade pip
-pip3 install flask opencv-python mediapipe
+pip3 install -r requirements.txt
 
 echo "✅ Installation complete!"
 echo "To run PlayAble:"
