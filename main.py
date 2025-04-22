@@ -1,7 +1,7 @@
 # main.py
 from core.gestures import GestureDetector
 from core.mappings import get_button_for_gesture
-from web.server import run_server, set_web_status
+from web.server import run_server, set_web_status, should_shutdown
 import cv2
 import threading
 import platform
@@ -25,6 +25,9 @@ gesture_active = False
 set_web_status("Start gesture detection")
 
 while True:
+    if should_shutdown():
+        break
+
     ret, frame = cap.read()
     if not ret:
         continue
