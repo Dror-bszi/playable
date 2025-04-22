@@ -10,7 +10,7 @@ sudo apt update
 sudo apt install -y python3 python3-pip libatlas-base-dev libjpeg-dev
 
 # Install Python requirements globally from requirements.txt
-pip3 install --upgrade pip
+pip3 install --break-system-packages --upgrade pip
 pip3 install --break-system-packages -r requirements.txt
 
 
