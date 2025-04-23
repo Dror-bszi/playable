@@ -1,3 +1,4 @@
+# web/server.py
 from flask import Flask, render_template, Response, redirect, url_for, request
 import threading
 import ui.controller_bluetooth as controller_bluetooth
@@ -33,21 +34,18 @@ def shutdown():
 
 @app.route("/controller")
 def controller_page():
-    return render_template("controller.html", devices=[], platform=controller_bluetooth.get_platform())
+    return render_template("controller.html", devices=[])
 
 @app.route("/scan_bluetooth", methods=["POST"])
 def scan_bluetooth():
     devices = controller_bluetooth.scan_devices()
-    if not devices:
-        devices = [("N/A", "⚠️ Scan timed out or no controller found")]
     return render_template("controller.html", devices=devices)
 
 @app.route("/connect_bluetooth", methods=["POST"])
 def connect_bluetooth():
     device = request.form.get("device")
     controller_bluetooth.connect_device(device)
-    devices = controller_bluetooth.scan_devices()  # Re-scan after connect
-    return render_template("controller.html", devices=devices, platform=controller_bluetooth.get_platform(), connected=device)
+    return render_template("controller.html", devices=[])
 
 def run_server():
     app.run(host='0.0.0.0', port=5000)

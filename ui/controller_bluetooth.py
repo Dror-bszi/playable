@@ -1,5 +1,7 @@
+# ui/controller_bluetooth.py
 import subprocess
 import re
+
 
 def scan_devices():
     """Scans for Bluetooth devices using sudo + hcitool."""
@@ -15,3 +17,9 @@ def scan_devices():
         return devices
     except subprocess.TimeoutExpired:
         return [("N/A", "⚠️ Scan timed out")]
+
+
+def connect_device(mac):
+    """Connects and trusts the given Bluetooth MAC address using bluetoothctl."""
+    subprocess.run(f'echo -e "connect {mac}\ntrust {mac}\nexit" | bluetoothctl', shell=True)
+    return True
