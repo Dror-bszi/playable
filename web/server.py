@@ -31,6 +31,10 @@ def controller():
     global devices, connected_device
     return render_template("controller.html", devices=devices, connected=connected_device)
 
+@app.route("/live_input")
+def live_input():
+    return render_template("controller_status.html")
+
 @app.route("/controller_status")
 def controller_status():
     if not controller_available:

@@ -1,3 +1,4 @@
+#update.sh
 echo "📦 Updating PlayAble from GitHub..."
 
 cd "$(dirname "$0")"
