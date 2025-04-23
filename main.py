@@ -6,41 +6,45 @@ import cv2
 import threading
 
 cap = cv2.VideoCapture(0)
-detector = GestureDetector()
 
 # Start web server in background
 threading.Thread(target=run_server, daemon=True).start()
 
-set_web_status("Calibrate: Hold rest position...")
-while True:
-    ret, frame = cap.read()
-    if not ret:
-        continue
-    if detector.calibrate(frame):
-        set_web_status("Calibration complete!")
-        break
+if not cap.isOpened():
+    set_web_status("❌ Camera not found. Connect one to enable gestures.")
+else:
+    detector = GestureDetector()
 
-gesture_active = False
-set_web_status("Start gesture detection")
+    set_web_status("Calibrate: Hold rest position...")
+    while True:
+        ret, frame = cap.read()
+        if not ret:
+            continue
+        if detector.calibrate(frame):
+            set_web_status("Calibration complete!")
+            break
 
-while True:
-    if should_shutdown():
-        break
+    gesture_active = False
+    set_web_status("Start gesture detection")
 
-    ret, frame = cap.read()
-    if not ret:
-        continue
+    while True:
+        if should_shutdown():
+            break
 
-    elbow_raised = detector.is_elbow_raised_forward(frame)
-    if elbow_raised and not gesture_active:
-        button = get_button_for_gesture("elbow_raised")
-        if button:
-            set_web_status(f"Pressed: {button.upper()}")
-        gesture_active = True
+        ret, frame = cap.read()
+        if not ret:
+            continue
 
-    elif not elbow_raised and gesture_active:
-        gesture_active = False
-        set_web_status("Waiting for gesture...")
+        elbow_raised = detector.is_elbow_raised_forward(frame)
+        if elbow_raised and not gesture_active:
+            button = get_button_for_gesture("elbow_raised")
+            if button:
+                set_web_status(f"Pressed: {button.upper()}")
+            gesture_active = True
 
-cap.release()
-cv2.destroyAllWindows()
+        elif not elbow_raised and gesture_active:
+            gesture_active = False
+            set_web_status("Waiting for gesture...")
+
+    cap.release()
+    cv2.destroyAllWindows()
