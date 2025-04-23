@@ -12,6 +12,7 @@
         .back-link { display: inline-block; margin-bottom: 1em; color: #007bff; text-decoration: none; }
         .back-link:hover { text-decoration: underline; }
         .success { color: green; margin-top: 1em; }
+        .warning { color: darkorange; margin-top: 1em; }
     </style>
 </head>
 <body>
@@ -41,7 +42,7 @@
         {% endfor %}
         </ul>
     {% else %}
-        <p>No controllers found. Make sure your controller is in pairing mode and try scanning again.</p>
+        <p class="warning">⚠️ No controllers found. Make sure your controller is in pairing mode and try scanning again.</p>
     {% endif %}
 </body>
 </html>

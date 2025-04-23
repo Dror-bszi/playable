@@ -38,7 +38,9 @@ def controller_page():
 @app.route("/scan_bluetooth", methods=["POST"])
 def scan_bluetooth():
     devices = controller_bluetooth.scan_devices()
-    return render_template("controller.html", devices=devices, platform=controller_bluetooth.get_platform())
+    if not devices:
+        devices = [("N/A", "⚠️ Scan timed out or no controller found")]
+    return render_template("controller.html", devices=devices)
 
 @app.route("/connect_bluetooth", methods=["POST"])
 def connect_bluetooth():
