@@ -40,12 +40,12 @@ def scan_devices():
         return []
 
 def connect_device(mac):
-    result = subprocess.run(
-        f'echo -e "connect {mac}\ntrust {mac}\nexit" | bluetoothctl',
-        shell=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        text=True
-    )
-    print("[DEBUG] connect_device output:", result.stdout)
-    return "Connection successful" in result.stdout or "Connection successful" in result.stderr
+    try:
+        process = subprocess.Popen(["bluetoothctl"], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+        commands = f"trust {mac}\nconnect {mac}\nexit\n"
+        output, _ = process.communicate(commands, timeout=10)
+        print("[DEBUG] connect_device output:", output)
+        return "Connection successful" in output or "Connection established" in output
+    except Exception as e:
+        print("[ERROR] Failed to connect:", e)
+        return False
