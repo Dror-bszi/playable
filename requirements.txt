@@ -3,3 +3,4 @@ flask
 opencv-python
 mediapipe
 pydualsense
+hidapi

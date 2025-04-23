@@ -19,7 +19,10 @@ sudo apt install -y \
     libgl1 \
     bluetooth \
     bluez \
-    bluez-tools
+    bluez-tools \
+    libhidapi-hidraw0 \
+    libhidapi-libusb0
+
 
 # ─── Python Packages ─────────────────────────────
 # Install dependencies using --break-system-packages (needed on Pi OS Bookworm)
