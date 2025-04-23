@@ -45,7 +45,10 @@ def connect_device(mac):
         commands = f"trust {mac}\nconnect {mac}\nexit\n"
         output, _ = process.communicate(commands, timeout=10)
         print("[DEBUG] connect_device output:", output)
-        return "Connection successful" in output or "Connection established" in output
+        return any(keyword in output.lower() for keyword in [
+            "successful", "connected", "connection established", "already connected"
+        ])
     except Exception as e:
         print("[ERROR] Failed to connect:", e)
         return False
+
