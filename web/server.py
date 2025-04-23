@@ -37,20 +37,26 @@ def live_input():
 
 @app.route("/controller_status")
 def controller_status():
-    if not controller_available:
-        return jsonify({"connected": False})
+    try:
+        from pydualsense import DualSense
+        ds = DualSense()
+        if not ds.connected():
+            return jsonify({"connected": False})
 
-    state = {
-        "connected": True,
-        "buttons": dualsense.state.buttons.__dict__,
-        "l2": dualsense.state.L2,
-        "r2": dualsense.state.R2,
-        "lx": dualsense.state.LX,
-        "ly": dualsense.state.LY,
-        "rx": dualsense.state.RX,
-        "ry": dualsense.state.RY
-    }
-    return jsonify(state)
+        state = {
+            "connected": True,
+            "buttons": ds.state.buttons.__dict__,
+            "l2": ds.state.L2,
+            "r2": ds.state.R2,
+            "lx": ds.state.LX,
+            "ly": ds.state.LY,
+            "rx": ds.state.RX,
+            "ry": ds.state.RY
+        }
+        return jsonify(state)
+    except Exception as e:
+        return jsonify({"connected": False, "error": str(e)})
+
 
 @app.route("/scan_bluetooth", methods=["POST"])
 def scan():
