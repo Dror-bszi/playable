@@ -1,29 +1,47 @@
 # ui/controller_bluetooth.py
 import subprocess
 import re
+import time
 
 
 def scan_devices():
     try:
-        result = subprocess.run(["sudo", "hcitool", "scan"], capture_output=True, text=True, timeout=15)
-        print("Raw stdout:", result.stdout)
-        print("Raw stderr:", result.stderr)
+        process = subprocess.Popen(
+            ["bluetoothctl"],
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True
+        )
+
+        # Start scanning
+        process.stdin.write("scan on\n")
+        process.stdin.flush()
+        time.sleep(5)  # Wait for devices to appear
+
+        # Stop scanning and list devices
+        process.stdin.write("scan off\n")
+        process.stdin.write("devices\n")
+        process.stdin.write("exit\n")
+        process.stdin.flush()
+
+        stdout, _ = process.communicate(timeout=10)
+        print("bluetoothctl output:\n", stdout)
+
         devices = []
-        for line in result.stdout.splitlines()[1:]:
-            match = re.match(r"([0-9A-F:]{17})\s+(.+)", line)
+        for line in stdout.splitlines():
+            match = re.match(r"Device ([0-9A-F:]{17}) (.+)", line)
             if match:
                 mac, name = match.groups()
                 if "DualSense" in name or "Wireless" in name or "Controller" in name:
                     devices.append((mac, name))
-        return devices
-    except subprocess.CalledProcessError as e:
-        print("Scan failed:", e.output)
-        return [("N/A", "⚠️ Scan error")]
+        return devices if devices else [("N/A", "⚠️ No relevant controller found")]
     except subprocess.TimeoutExpired:
-        print("Scan timed out")
         return [("N/A", "⚠️ Scan timed out")]
+    except Exception as e:
+        return [("N/A", f"⚠️ Error: {str(e)}")]
+
 
 def connect_device(mac):
-    """Connects and trusts the given Bluetooth MAC address using bluetoothctl."""
     subprocess.run(f'echo -e "connect {mac}\ntrust {mac}\nexit" | bluetoothctl', shell=True)
     return True
