@@ -5,20 +5,20 @@ import re
 
 def scan_devices():
     try:
-        output = subprocess.check_output(["sudo", "hcitool", "scan"], timeout=10, text=True, stderr=subprocess.STDOUT)
+        result = subprocess.run(["sudo", "hcitool", "scan"], capture_output=True, text=True, timeout=10)
+        print("Raw stdout:", result.stdout)
+        print("Raw stderr:", result.stderr)
         devices = []
-        for line in output.splitlines()[1:]:
+        for line in result.stdout.splitlines()[1:]:
             match = re.match(r"([0-9A-F:]{17})\s+(.+)", line)
             if match:
                 mac, name = match.groups()
                 if "DualSense" in name or "Wireless" in name or "Controller" in name:
                     devices.append((mac, name))
         return devices
-    except subprocess.CalledProcessError as e:
-        print("Scan failed:", e.output)
-        return [("N/A", "⚠️ Scan error")]
     except subprocess.TimeoutExpired:
-        return [("N/A", "⚠️ Scan timed out")]
+        print("Scan timed out")
+        return []
 
 def connect_device(mac):
     """Connects and trusts the given Bluetooth MAC address using bluetoothctl."""
