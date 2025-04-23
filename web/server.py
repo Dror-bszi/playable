@@ -1,4 +1,3 @@
-# web/server.py
 from flask import Flask, render_template, Response, redirect, url_for, request
 import threading
 import ui.controller_bluetooth as controller_bluetooth
@@ -34,19 +33,19 @@ def shutdown():
 
 @app.route("/controller")
 def controller_page():
-    return render_template("controller.html", devices=[])
+    return render_template("controller.html", devices=[], platform=controller_bluetooth.get_platform())
 
 @app.route("/scan_bluetooth", methods=["POST"])
 def scan_bluetooth():
     devices = controller_bluetooth.scan_devices()
-    return render_template("controller.html", devices=devices)
+    return render_template("controller.html", devices=devices, platform=controller_bluetooth.get_platform())
 
 @app.route("/connect_bluetooth", methods=["POST"])
 def connect_bluetooth():
     device = request.form.get("device")
     controller_bluetooth.connect_device(device)
-    return render_template("controller.html", devices=[])
-
+    devices = controller_bluetooth.scan_devices()  # Re-scan after connect
+    return render_template("controller.html", devices=devices, platform=controller_bluetooth.get_platform(), connected=device)
 
 def run_server():
     app.run(host='0.0.0.0', port=5000)

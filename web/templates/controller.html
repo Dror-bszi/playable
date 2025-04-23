@@ -1,23 +1,31 @@
-# web/templates/controller.html
 <!DOCTYPE html>
 <html>
 <head>
     <title>PlayAble - Connect Controller</title>
     <style>
-        body { font-family: Arial; padding: 2em; }
-        h1 { margin-bottom: 0.5em; }
+        body { font-family: Arial, sans-serif; padding: 2em; background-color: #f9f9f9; }
+        h1 { margin-bottom: 1em; }
         form { margin-top: 1em; }
-        ul { padding: 0; }
-        li { list-style: none; margin-bottom: 0.5em; }
-        button { margin-left: 1em; }
+        ul { padding-left: 0; list-style: none; margin-top: 1em; }
+        li { margin-bottom: 0.75em; }
+        button { margin-left: 1em; padding: 0.4em 0.8em; }
+        .back-link { display: inline-block; margin-bottom: 1em; color: #007bff; text-decoration: none; }
+        .back-link:hover { text-decoration: underline; }
+        .success { color: green; margin-top: 1em; }
     </style>
 </head>
 <body>
     <h1>Bluetooth Controller Setup</h1>
 
+    <a href="/" class="back-link">&larr; Back to Dashboard</a>
+
     <form action="/scan_bluetooth" method="post">
         <button type="submit">🔍 Scan for Controller</button>
     </form>
+
+    {% if connected %}
+        <p class="success">✅ Successfully attempted to connect {{ connected }}</p>
+    {% endif %}
 
     {% if devices %}
         <h2>Found Devices:</h2>
@@ -32,6 +40,8 @@
             </li>
         {% endfor %}
         </ul>
+    {% else %}
+        <p>No controllers found. Make sure your controller is in pairing mode and try scanning again.</p>
     {% endif %}
 </body>
 </html>
