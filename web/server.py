@@ -1,20 +1,44 @@
 # web/server.py
-from flask import Flask, render_template, Response, redirect, url_for, request
+from flask import Flask, render_template, request, redirect, url_for, Response
 import threading
-import ui.controller_bluetooth as controller_bluetooth
+import cv2
+from ui import controller_bluetooth
 
 app = Flask(__name__)
+
 status = "Waiting..."
 shutdown_flag = False
 
+# Bluetooth state
+devices = []
+connected_device = None
+
 @app.route("/")
-def index():
-    return render_template("index.html", status=status)
+def dashboard():
+    return render_template("dashboard.html", status=status)
+
+@app.route("/controller")
+def controller():
+    global devices, connected_device
+    return render_template("controller.html", devices=devices, connected=connected_device)
+
+@app.route("/scan_bluetooth", methods=["POST"])
+def scan():
+    global devices
+    devices = controller_bluetooth.scan_devices()
+    return redirect("/controller")
+
+@app.route("/connect_bluetooth", methods=["POST"])
+def connect():
+    global connected_device
+    mac = request.form.get("device")
+    success = controller_bluetooth.connect_device(mac)
+    connected_device = mac if success else None
+    return redirect("/controller")
 
 @app.route("/video_feed")
 def video_feed():
     def generate():
-        import cv2
         cap = cv2.VideoCapture(0)
         while True:
             success, frame = cap.read()
@@ -30,22 +54,7 @@ def video_feed():
 def shutdown():
     global shutdown_flag
     shutdown_flag = True
-    return redirect(url_for('index'))
-
-@app.route("/controller")
-def controller_page():
-    return render_template("controller.html", devices=[])
-
-@app.route("/scan_bluetooth", methods=["POST"])
-def scan_bluetooth():
-    devices = controller_bluetooth.scan_devices()
-    return render_template("controller.html", devices=devices)
-
-@app.route("/connect_bluetooth", methods=["POST"])
-def connect_bluetooth():
-    device = request.form.get("device")
-    controller_bluetooth.connect_device(device)
-    return render_template("controller.html", devices=[])
+    return redirect(url_for('dashboard'))
 
 def run_server():
     app.run(host='0.0.0.0', port=5000)

@@ -31,14 +31,21 @@ def scan_devices():
             match = re.match(r"Device ([0-9A-F:]{17}) (.+)", line)
             if match:
                 mac, name = match.groups()
-                devices.append((mac, name))  # Now include all devices, not only controllers
+                devices.append((mac, name))
 
-        return devices if devices else [("N/A", "⚠️ No devices found")]
+        return devices if devices else []
     except subprocess.TimeoutExpired:
-        return [("N/A", "⚠️ Scan timed out")]
+        return []
     except Exception as e:
-        return [("N/A", f"⚠️ Error: {str(e)}")]
+        return []
 
 def connect_device(mac):
-    subprocess.run(f'echo -e "connect {mac}\ntrust {mac}\nexit" | bluetoothctl', shell=True)
-    return True
+    result = subprocess.run(
+        f'echo -e "connect {mac}\ntrust {mac}\nexit" | bluetoothctl',
+        shell=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True
+    )
+    print("[DEBUG] connect_device output:", result.stdout)
+    return "Connection successful" in result.stdout or "Connection successful" in result.stderr

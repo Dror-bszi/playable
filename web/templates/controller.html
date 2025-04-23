@@ -25,10 +25,10 @@
     </form>
 
     {% if connected %}
-        <p class="success">✅ Successfully attempted to connect {{ connected }}</p>
+        <p class="success">✅ Successfully connected to: {{ connected }}</p>
     {% endif %}
 
-    {% if devices %}
+    {% if devices and devices|length > 0 %}
         <h2>Found Devices:</h2>
         <ul>
         {% for mac, name in devices %}
