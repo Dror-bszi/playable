@@ -1,17 +1,8 @@
-# web/server.py
 from flask import Flask, render_template, request, redirect, url_for, Response, jsonify
 import threading
 import cv2
 import time
 from ui import controller_bluetooth
-
-try:
-    from pydualsense import DualSense, InvalidDeviceError
-    dualsense = DualSense()
-    controller_available = dualsense.connected()
-except Exception as e:
-    dualsense = None
-    controller_available = False
 
 app = Flask(__name__)
 
@@ -38,25 +29,38 @@ def live_input():
 @app.route("/controller_status")
 def controller_status():
     try:
-        from pydualsense import DualSense
-        ds = DualSense()
+        from pydualsense import pydualsense
+        ds = pydualsense()
+        ds.init()
+
         if not ds.connected():
             return jsonify({"connected": False})
 
         state = {
             "connected": True,
-            "buttons": ds.state.buttons.__dict__,
-            "l2": ds.state.L2,
-            "r2": ds.state.R2,
-            "lx": ds.state.LX,
-            "ly": ds.state.LY,
-            "rx": ds.state.RX,
-            "ry": ds.state.RY
+            "buttons": {
+                "cross": ds.cross,
+                "circle": ds.circle,
+                "square": ds.square,
+                "triangle": ds.triangle,
+                "l1": ds.l1,
+                "r1": ds.r1,
+                "l2": ds.l2,
+                "r2": ds.r2,
+                "options": ds.options,
+                "share": ds.share
+            },
+            "l2": ds.L2,
+            "r2": ds.R2,
+            "lx": ds.LX,
+            "ly": ds.LY,
+            "rx": ds.RX,
+            "ry": ds.RY
         }
         return jsonify(state)
+
     except Exception as e:
         return jsonify({"connected": False, "error": str(e)})
-
 
 @app.route("/scan_bluetooth", methods=["POST"])
 def scan():
