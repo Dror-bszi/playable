@@ -10,9 +10,7 @@ cap = cv2.VideoCapture(0)
 # Start web server in background
 threading.Thread(target=run_server, daemon=True).start()
 
-if not cap.isOpened():
-    set_web_status("❌ Camera not found. Connect one to enable gestures.")
-else:
+if cap.isOpened():
     detector = GestureDetector()
 
     set_web_status("Calibrate: Hold rest position...")
@@ -48,3 +46,8 @@ else:
 
     cap.release()
     cv2.destroyAllWindows()
+else:
+    set_web_status("❌ Camera not found. Running in UI-only mode.")
+    while True:
+        if should_shutdown():
+            break
