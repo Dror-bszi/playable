@@ -3,7 +3,6 @@ import subprocess
 import re
 import time
 
-
 def scan_devices():
     try:
         process = subprocess.Popen(
@@ -14,32 +13,31 @@ def scan_devices():
             text=True
         )
 
-        # Start scanning
         process.stdin.write("scan on\n")
         process.stdin.flush()
-        time.sleep(5)  # Wait for devices to appear
+        time.sleep(5)
 
-        # Stop scanning and list devices
         process.stdin.write("scan off\n")
         process.stdin.write("devices\n")
         process.stdin.write("exit\n")
         process.stdin.flush()
 
-        stdout, _ = process.communicate(timeout=10)
+        stdout, stderr = process.communicate(timeout=10)
         print("bluetoothctl output:\n", stdout)
 
         devices = []
         for line in stdout.splitlines():
+            print("[DEBUG] LINE:", line)
             match = re.match(r"Device ([0-9A-F:]{17}) (.+)", line)
             if match:
                 mac, name = match.groups()
-                devices.append((mac, name))
-        return devices if devices else [("N/A", "⚠️ No devices found")]
+                if "DualSense" in name or "Wireless" in name or "Controller" in name:
+                    devices.append((mac, name))
+        return devices if devices else [("N/A", "⚠️ No relevant controller found")]
     except subprocess.TimeoutExpired:
         return [("N/A", "⚠️ Scan timed out")]
     except Exception as e:
         return [("N/A", f"⚠️ Error: {str(e)}")]
-
 
 def connect_device(mac):
     subprocess.run(f'echo -e "connect {mac}\ntrust {mac}\nexit" | bluetoothctl', shell=True)
