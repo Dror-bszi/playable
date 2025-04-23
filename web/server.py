@@ -15,7 +15,7 @@ connected_device = None
 
 @app.route("/")
 def dashboard():
-    return render_template("dashboard.html", status=status)
+    return render_template("index.html", status=status)
 
 @app.route("/controller")
 def controller():
