@@ -15,14 +15,14 @@ def scan_devices():
 
         process.stdin.write("scan on\n")
         process.stdin.flush()
-        time.sleep(5)
+        time.sleep(15)  # Increased scan duration
 
         process.stdin.write("scan off\n")
         process.stdin.write("devices\n")
         process.stdin.write("exit\n")
         process.stdin.flush()
 
-        stdout, stderr = process.communicate(timeout=10)
+        stdout, stderr = process.communicate(timeout=30)  # Increased timeout
         print("bluetoothctl output:\n", stdout)
 
         devices = []
@@ -31,9 +31,9 @@ def scan_devices():
             match = re.match(r"Device ([0-9A-F:]{17}) (.+)", line)
             if match:
                 mac, name = match.groups()
-                if any(keyword in name.lower() for keyword in ["dualsense", "wireless", "controller"]):
-                    devices.append((mac, name))
-        return devices if devices else [("N/A", "⚠️ No relevant controller found")]
+                devices.append((mac, name))  # Now include all devices, not only controllers
+
+        return devices if devices else [("N/A", "⚠️ No devices found")]
     except subprocess.TimeoutExpired:
         return [("N/A", "⚠️ Scan timed out")]
     except Exception as e:
