@@ -33,9 +33,8 @@ def scan_devices():
             match = re.match(r"Device ([0-9A-F:]{17}) (.+)", line)
             if match:
                 mac, name = match.groups()
-                if "DualSense" in name or "Wireless" in name or "Controller" in name:
-                    devices.append((mac, name))
-        return devices if devices else [("N/A", "⚠️ No relevant controller found")]
+                devices.append((mac, name))
+        return devices if devices else [("N/A", "⚠️ No devices found")]
     except subprocess.TimeoutExpired:
         return [("N/A", "⚠️ Scan timed out")]
     except Exception as e:
