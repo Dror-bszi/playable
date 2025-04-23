@@ -1,8 +1,17 @@
 # web/server.py
-from flask import Flask, render_template, request, redirect, url_for, Response
+from flask import Flask, render_template, request, redirect, url_for, Response, jsonify
 import threading
 import cv2
+import time
 from ui import controller_bluetooth
+
+try:
+    from pydualsense import DualSense, InvalidDeviceError
+    dualsense = DualSense()
+    controller_available = dualsense.connected()
+except Exception as e:
+    dualsense = None
+    controller_available = False
 
 app = Flask(__name__)
 
@@ -21,6 +30,23 @@ def dashboard():
 def controller():
     global devices, connected_device
     return render_template("controller.html", devices=devices, connected=connected_device)
+
+@app.route("/controller_status")
+def controller_status():
+    if not controller_available:
+        return jsonify({"connected": False})
+
+    state = {
+        "connected": True,
+        "buttons": dualsense.state.buttons.__dict__,
+        "l2": dualsense.state.L2,
+        "r2": dualsense.state.R2,
+        "lx": dualsense.state.LX,
+        "ly": dualsense.state.LY,
+        "rx": dualsense.state.RX,
+        "ry": dualsense.state.RY
+    }
+    return jsonify(state)
 
 @app.route("/scan_bluetooth", methods=["POST"])
 def scan():

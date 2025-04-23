@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PlayAble - Controller Live Status</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 2em; background-color: #f0f0f0; }
+        h1 { margin-bottom: 1em; }
+        .button-link { text-decoration: none; color: #007bff; margin-bottom: 1em; display: inline-block; }
+        pre { background-color: #fff; padding: 1em; border: 1px solid #ccc; white-space: pre-wrap; word-wrap: break-word; }
+    </style>
+    <script>
+        async function fetchStatus() {
+            const res = await fetch("/controller_status");
+            const data = await res.json();
+            document.getElementById("status").textContent = JSON.stringify(data, null, 2);
+        }
+
+        setInterval(fetchStatus, 500);
+    </script>
+</head>
+<body>
+    <h1>Live Controller Status</h1>
+    <a href="/" class="button-link">&larr; Back to Dashboard</a>
+    <pre id="status">Loading...</pre>
+</body>
+</html>
