@@ -2,32 +2,36 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Controller Connection</title>
+    <title>PlayAble - Connect Controller</title>
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; }
-        button { padding: 10px 20px; margin: 10px; font-size: 16px; }
-        ul { list-style: none; padding: 0; }
-        li { margin: 5px 0; }
+        body { font-family: Arial; padding: 2em; }
+        h1 { margin-bottom: 0.5em; }
+        form { margin-top: 1em; }
+        ul { padding: 0; }
+        li { list-style: none; margin-bottom: 0.5em; }
+        button { margin-left: 1em; }
     </style>
 </head>
 <body>
-    <h1>Connect to PS5 Controller</h1>
+    <h1>Bluetooth Controller Setup</h1>
+
     <form action="/scan_bluetooth" method="post">
-        <button type="submit">🔍 Scan for Controllers</button>
+        <button type="submit">🔍 Scan for Controller</button>
     </form>
+
     {% if devices %}
-    <h3>Available Devices:</h3>
-    <ul>
-        {% for d in devices %}
-        <li>
-            {{ d }}
-            <form action="/connect_bluetooth" method="post" style="display:inline;">
-                <input type="hidden" name="device" value="{{ d }}">
-                <button type="submit">Connect</button>
-            </form>
-        </li>
+        <h2>Found Devices:</h2>
+        <ul>
+        {% for mac, name in devices %}
+            <li>
+                {{ name }} ({{ mac }})
+                <form action="/connect_bluetooth" method="post" style="display:inline">
+                    <input type="hidden" name="device" value="{{ mac }}">
+                    <button type="submit">Connect</button>
+                </form>
+            </li>
         {% endfor %}
-    </ul>
+        </ul>
     {% endif %}
 </body>
 </html>
