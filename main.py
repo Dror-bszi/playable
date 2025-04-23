@@ -4,7 +4,6 @@ from core.mappings import get_button_for_gesture
 from web.server import run_server, set_web_status, should_shutdown
 import cv2
 import threading
-import platform
 
 cap = cv2.VideoCapture(0)
 detector = GestureDetector()
@@ -42,11 +41,6 @@ while True:
     elif not elbow_raised and gesture_active:
         gesture_active = False
         set_web_status("Waiting for gesture...")
-
-    if platform.system() != "Windows":
-        cv2.imshow("Gesture Detection", frame)
-        if cv2.waitKey(5) & 0xFF == 27:
-            break
 
 cap.release()
 cv2.destroyAllWindows()

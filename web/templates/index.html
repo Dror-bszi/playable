@@ -8,6 +8,15 @@
         h1 { font-size: 2rem; }
         img { border: 2px solid black; margin-top: 20px; }
         button { padding: 10px 20px; font-size: 1rem; margin-top: 30px; cursor: pointer; }
+        a.button-link {
+            display: inline-block;
+            padding: 10px 20px;
+            margin-top: 20px;
+            background-color: #007BFF;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+        }
     </style>
 </head>
 <body>
@@ -17,5 +26,7 @@
     <form action="/shutdown" method="get">
         <button type="submit">Shut Down</button>
     </form>
+    <br>
+    <a href="/controller" class="button-link">Controller Setup</a>
 </body>
 </html>
