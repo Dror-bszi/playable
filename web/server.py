@@ -33,29 +33,15 @@ def controller_status():
         ds = pydualsense()
         ds.init()
 
-        if not ds.connected():
-            return jsonify({"connected": False})
-
         state = {
             "connected": True,
-            "buttons": {
-                "cross": ds.cross,
-                "circle": ds.circle,
-                "square": ds.square,
-                "triangle": ds.triangle,
-                "l1": ds.l1,
-                "r1": ds.r1,
-                "l2": ds.l2,
-                "r2": ds.r2,
-                "options": ds.options,
-                "share": ds.share
-            },
-            "l2": ds.L2,
-            "r2": ds.R2,
-            "lx": ds.LX,
-            "ly": ds.LY,
-            "rx": ds.RX,
-            "ry": ds.RY
+            "buttons": ds.state.buttons.__dict__,
+            "l2": ds.state.L2,
+            "r2": ds.state.R2,
+            "lx": ds.state.LX,
+            "ly": ds.state.LY,
+            "rx": ds.state.RX,
+            "ry": ds.state.RY
         }
         return jsonify(state)
 
