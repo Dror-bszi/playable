@@ -42,13 +42,18 @@ def scan_devices():
 def connect_device(mac):
     try:
         process = subprocess.Popen(["bluetoothctl"], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
-        commands = f"trust {mac}\nconnect {mac}\nexit\n"
-        output, _ = process.communicate(commands, timeout=10)
+        commands = f"pair {mac}\ntrust {mac}\nconnect {mac}\ninfo {mac}\nexit\n"
+        output, _ = process.communicate(commands, timeout=15)
         print("[DEBUG] connect_device output:", output)
+
+        # Check if the controller is reported as connected
+        if re.search(r"Connected: yes", output):
+            return True
+
+        # Fallback check for other success indications
         return any(keyword in output.lower() for keyword in [
-            "successful", "connected", "connection established", "already connected"
+            "successful", "connection established", "already connected"
         ])
     except Exception as e:
         print("[ERROR] Failed to connect:", e)
         return False
-
