@@ -41,43 +41,15 @@ def scan_devices():
 
 def connect_device(mac):
     try:
-        process = subprocess.Popen(
-            ["bluetoothctl"],
-            stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE,
+        script_path = os.path.abspath("utils/pair_controller.expect")
+        output = subprocess.check_output(
+            ["expect", script_path, mac],
             stderr=subprocess.STDOUT,
-            text=True
+            text=True,
+            timeout=40
         )
-
-        # Full pairing script
-        commands = f"""
-        agent on
-        default-agent
-        remove {mac}
-        scan on
-        pair {mac}
-        trust {mac}
-        connect {mac}
-        info {mac}
-        exit
-        """
-
-        output, _ = process.communicate(commands, timeout=30)
-        print("[DEBUG] connect_device output:\n", output)
-
-        # Check for success keywords
-        if re.search(r"Connected:\s+yes", output):
-            return True
-
-        return any(keyword in output.lower() for keyword in [
-            "pairing successful",
-            "connection successful",
-            "already connected",
-            f"{mac.lower()} connected: yes"
-        ])
-    except subprocess.TimeoutExpired:
-        print("[ERROR] Bluetooth command timed out.")
-        return False
-    except Exception as e:
-        print("[ERROR] Failed to connect:", e)
+        print("[DEBUG] expect output:", output)
+        return "Pairing successful" in output or "Connection successful" in output
+    except subprocess.CalledProcessError as e:
+        print("[ERROR] Expect script failed:", e.output)
         return False

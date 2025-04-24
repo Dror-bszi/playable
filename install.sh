@@ -21,7 +21,8 @@ sudo apt install -y \
     bluez \
     bluez-tools \
     libhidapi-hidraw0 \
-    libhidapi-libusb0
+    libhidapi-libusb0 \
+    expect
 
 
 # ─── Python Packages ─────────────────────────────
