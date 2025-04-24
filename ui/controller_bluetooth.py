@@ -2,6 +2,8 @@
 import subprocess
 import re
 import time
+import os
+
 
 def scan_devices():
     try:

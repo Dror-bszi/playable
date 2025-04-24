@@ -29,6 +29,9 @@ sudo apt install -y \
 # Install dependencies using --break-system-packages (needed on Pi OS Bookworm)
 pip3 install --break-system-packages --upgrade pip
 pip3 install --break-system-packages -r requirements.txt
+# ─── Bluetooth Setup ────────────────────────────
+# Enable Bluetooth service 
+chmod +x "$(dirname "$0")/utils/pair_controller.expect"
 
 # ─── Completion ───────────────────────────────────
 echo "✅ Installation complete!"
