@@ -1,4 +1,3 @@
-# web/templates/index.html
 <!DOCTYPE html>
 <html>
 <head>
@@ -18,31 +17,7 @@
             border-radius: 4px;
             margin-right: 10px;
         }
-        .status-box {
-            margin-top: 40px;
-            font-size: 1rem;
-            padding: 10px;
-            background-color: #f1f1f1;
-            display: inline-block;
-            border-radius: 8px;
-        }
-        .status-box pre {
-            text-align: left;
-        }
     </style>
-    <script>
-        async function updateControllerStatus() {
-            try {
-                const res = await fetch('/controller_status');
-                const data = await res.json();
-                document.getElementById("controller-data").textContent = JSON.stringify(data, null, 2);
-            } catch (e) {
-                document.getElementById("controller-data").textContent = 'Controller not connected or error.';
-            }
-        }
-        setInterval(updateControllerStatus, 1000);
-        window.onload = updateControllerStatus;
-    </script>
 </head>
 <body>
     <h1>{{ status }}</h1>
@@ -53,14 +28,6 @@
     </form>
     <br>
     <a href="/controller" class="button-link">Controller Setup</a>
-    <a href="/live_input" class="button-link">Live Input View</a>
     <a href="/controller_status" class="button-link">🎮 Live Controller View</a>
-
-
-
-    <div class="status-box">
-        <h2>Live Controller Status</h2>
-        <pre id="controller-data">Loading...</pre>
-    </div>
 </body>
 </html>
