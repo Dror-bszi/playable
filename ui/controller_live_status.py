@@ -18,37 +18,45 @@ def _monitor_device(dev_path):
     global status
     try:
         dev = InputDevice(dev_path)
+        print(f"[DEBUG] 🎮 Monitoring device: {dev.name} ({dev.path})")
         status["connected"] = True
         status["error"] = None
 
         for event in dev.read_loop():
-            try:
-                if event.type == ecodes.EV_KEY:
+            if event.type == ecodes.EV_KEY:
+                try:
                     key = ecodes.KEY[event.code]
-                    if event.value == 1:
-                        status["buttons"].add(key)
-                    elif event.value == 0:
-                        status["buttons"].discard(key)
-                elif event.type == ecodes.EV_ABS:
-                    code = event.code
-                    value = event.value
-                    if code == ecodes.ABS_Z:
-                        status["l2"] = value
-                    elif code == ecodes.ABS_RZ:
-                        status["r2"] = value
-                    elif code == ecodes.ABS_X:
-                        status["lx"] = value
-                    elif code == ecodes.ABS_Y:
-                        status["ly"] = value
-                    elif code == ecodes.ABS_RX:
-                        status["rx"] = value
-                    elif code == ecodes.ABS_RY:
-                        status["ry"] = value
-            except Exception as nested_e:
-                status["error"] = f"event error: {str(nested_e)}"
+                except KeyError:
+                    key = f"KEY_{event.code}"
+
+                if event.value == 1:
+                    print(f"[DEBUG] 🔘 Button Pressed: {key}")
+                    status["buttons"].add(key)
+                elif event.value == 0:
+                    print(f"[DEBUG] ⚪ Button Released: {key}")
+                    status["buttons"].discard(key)
+
+            elif event.type == ecodes.EV_ABS:
+                code = event.code
+                value = event.value
+                if code == ecodes.ABS_Z:
+                    status["l2"] = value
+                elif code == ecodes.ABS_RZ:
+                    status["r2"] = value
+                elif code == ecodes.ABS_X:
+                    status["lx"] = value
+                elif code == ecodes.ABS_Y:
+                    status["ly"] = value
+                elif code == ecodes.ABS_RX:
+                    status["rx"] = value
+                elif code == ecodes.ABS_RY:
+                    status["ry"] = value
+                print(f"[DEBUG] 🎮 ABS {code} = {value}")
+
     except Exception as e:
         status["connected"] = False
         status["error"] = str(e)
+        print(f"[ERROR] Controller monitoring failed: {e}")
 
 def start_controller_monitor():
     devices = [InputDevice(path) for path in list_devices()]
@@ -59,6 +67,7 @@ def start_controller_monitor():
             return True
     status["connected"] = False
     status["error"] = "DualSense controller not found"
+    print("[ERROR] No matching DualSense controller found.")
     return False
 
 def get_status():
