@@ -61,11 +61,7 @@
                 const res = await fetch("/controller_status");
                 const data = await res.json();
 
-                if (data.connected) {
-                    document.getElementById("device-path").textContent = `✅ ${data.device_path}`;
-                } else {
-                    document.getElementById("device-path").textContent = "❌ Controller not connected.";
-                }
+                document.getElementById("device-path").textContent = data.device_path ?? "Not detected";
 
                 const buttonsContainer = document.getElementById("buttons");
                 const allButtons = ["KEY_304", "KEY_305", "KEY_307", "KEY_308", "KEY_310", "KEY_311", "KEY_312", "KEY_313"];
