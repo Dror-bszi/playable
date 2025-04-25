@@ -2,13 +2,33 @@ from flask import Flask, render_template, request, redirect, url_for, Response, 
 import threading
 import cv2
 import time
+import os
+import logging
+from logging.handlers import RotatingFileHandler
+
 from ui import controller_bluetooth
 from ui.controller_live_status import start_controller_monitor, get_status
 
-# Start monitoring the controller at app launch
-start_controller_monitor()
+# ─── Logging Configuration ───────────────────────────────
+log_dir = "logs"
+os.makedirs(log_dir, exist_ok=True)
+log_path = os.path.join(log_dir, "playable_web.log")
+
+handler = RotatingFileHandler(log_path, maxBytes=1000000, backupCount=3)
+handler.setLevel(logging.INFO)
+formatter = logging.Formatter("[%(asctime)s] [%(levelname)s] %(message)s", "%Y-%m-%d %H:%M:%S")
+handler.setFormatter(formatter)
 
 app = Flask(__name__)
+app.logger.handlers = [handler]
+app.logger.setLevel(logging.INFO)
+
+werkzeug_logger = logging.getLogger("werkzeug")
+werkzeug_logger.setLevel(logging.ERROR)
+werkzeug_logger.handlers = [handler]
+
+# ─── Start Controller Monitor ─────────────────────────────
+start_controller_monitor()
 
 status = "Waiting..."
 shutdown_flag = False
@@ -26,9 +46,6 @@ def controller():
     global devices, connected_device
     return render_template("controller.html", devices=devices, connected=connected_device)
 
-
-from evdev import InputDevice, categorize, ecodes, list_devices
-
 @app.route("/controller_status_page")
 def controller_status_page():
     return render_template("controller_status.html")
@@ -36,9 +53,6 @@ def controller_status_page():
 @app.route("/controller_status")
 def controller_status_data():
     return jsonify(get_status())
-
-
-
 
 @app.route("/scan_bluetooth", methods=["POST"])
 def scan():
