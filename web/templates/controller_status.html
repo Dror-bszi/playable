@@ -2,58 +2,113 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Live Controller Status</title>
+    <title>PlayAble - Controller Dashboard</title>
     <style>
-        body { font-family: Arial, sans-serif; padding: 2em; background-color: #f0f0f0; }
-        h1 { margin-bottom: 1em; }
-        .box { background: white; padding: 1em; border-radius: 8px; border: 1px solid #ccc; width: fit-content; margin: auto; }
-        .label { font-weight: bold; }
-        .row { margin: 0.5em 0; }
-        .button { display: inline-block; padding: 4px 10px; margin: 2px; background: #007bff; color: white; border-radius: 4px; font-size: 0.9em; }
-        .inactive { background: #cccccc; }
+        body { font-family: Arial, sans-serif; background: #f5f5f5; margin: 0; padding: 2em; }
+        h1 { text-align: center; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2em; max-width: 800px; margin: auto; }
+        .panel { background: white; padding: 1.5em; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .panel h2 { margin-top: 0; }
+        .buttons span {
+            display: inline-block;
+            padding: 10px 14px;
+            margin: 5px;
+            border-radius: 6px;
+            background-color: #ddd;
+            font-weight: bold;
+        }
+        .buttons .active {
+            background-color: #007bff;
+            color: white;
+        }
+        .stick-container, .trigger-bar {
+            margin-top: 10px;
+        }
+        .stick {
+            width: 120px; height: 120px; background: #eee; border-radius: 50%; position: relative;
+        }
+        .stick-dot {
+            width: 12px; height: 12px; background: red; border-radius: 50%; position: absolute;
+            transform: translate(-50%, -50%);
+        }
+        .bar {
+            height: 20px;
+            background: #ddd;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .bar-fill {
+            height: 100%;
+            background: #28a745;
+            width: 0;
+        }
     </style>
     <script>
         async function updateStatus() {
-            try {
-                const res = await fetch("/controller_status");
-                const data = await res.json();
-                document.getElementById("connection").textContent = data.connected ? "✅ Connected" : "❌ Disconnected";
-                document.getElementById("device").textContent = data.device_path || "N/A";
-                document.getElementById("l2").textContent = data.l2;
-                document.getElementById("r2").textContent = data.r2;
-                document.getElementById("lx").textContent = data.lx;
-                document.getElementById("ly").textContent = data.ly;
-                document.getElementById("rx").textContent = data.rx;
-                document.getElementById("ry").textContent = data.ry;
+            const res = await fetch('/controller_status');
+            const data = await res.json();
 
-                const buttonList = ["KEY_C", "KEY_X", "KEY_Z", "KEY_A", "KEY_B", "KEY_Y", "BTN_TL", "BTN_TR", "BTN_SELECT", "BTN_START"];
-                const buttonContainer = document.getElementById("buttons");
-                buttonContainer.innerHTML = "";
-                for (let b of buttonList) {
-                    const btn = document.createElement("span");
-                    btn.className = "button" + (data.buttons.includes(b) ? "" : " inactive");
-                    btn.textContent = b;
-                    buttonContainer.appendChild(btn);
-                }
+            // Buttons
+            const buttons = ["X","O","▢","△","L1","R1","L2","R2","Share","Options","L3","R3"];
+            const container = document.getElementById("buttons");
+            container.innerHTML = "";
+            buttons.forEach(b => {
+                const el = document.createElement("span");
+                el.textContent = b;
+                if (data.buttons.includes(b)) el.classList.add("active");
+                container.appendChild(el);
+            });
 
-            } catch (e) {
-                console.error("Controller status error:", e);
-            }
+            // Joysticks
+            const lx = (data.lx - 128) / 2; // normalize to -64 to +64
+            const ly = (data.ly - 128) / 2;
+            const dotL = document.getElementById("dot-l");
+            dotL.style.left = 60 + lx + "px";
+            dotL.style.top = 60 + ly + "px";
+
+            const rx = (data.rx - 128) / 2;
+            const ry = (data.ry - 128) / 2;
+            const dotR = document.getElementById("dot-r");
+            dotR.style.left = 60 + rx + "px";
+            dotR.style.top = 60 + ry + "px";
+
+            // Triggers
+            document.getElementById("l2-bar").style.width = data.l2 / 2.55 + "%";
+            document.getElementById("r2-bar").style.width = data.r2 / 2.55 + "%";
         }
 
-        setInterval(updateStatus, 500);
-        window.onload = updateStatus;
+        setInterval(updateStatus, 200);
     </script>
 </head>
 <body>
-    <h1>🎮 Live Controller Input</h1>
-    <div class="box">
-        <div class="row"><span class="label">Connection:</span> <span id="connection"></span></div>
-        <div class="row"><span class="label">Device:</span> <span id="device"></span></div>
-        <div class="row"><span class="label">L2:</span> <span id="l2"></span> | <span class="label">R2:</span> <span id="r2"></span></div>
-        <div class="row"><span class="label">Left Stick:</span> (<span id="lx"></span>, <span id="ly"></span>)</div>
-        <div class="row"><span class="label">Right Stick:</span> (<span id="rx"></span>, <span id="ry"></span>)</div>
-        <div class="row"><span class="label">Buttons:</span> <div id="buttons"></div></div>
+    <h1>🎮 PlayAble - Controller Live View</h1>
+    <div class="grid">
+        <div class="panel">
+            <h2>Buttons</h2>
+            <div class="buttons" id="buttons"></div>
+        </div>
+
+        <div class="panel">
+            <h2>Triggers</h2>
+            <p>L2:</p>
+            <div class="bar"><div class="bar-fill" id="l2-bar"></div></div>
+            <p>R2:</p>
+            <div class="bar"><div class="bar-fill" id="r2-bar"></div></div>
+        </div>
+
+        <div class="panel">
+            <h2>Left Joystick</h2>
+            <div class="stick-container">
+                <div class="stick"><div class="stick-dot" id="dot-l"></div></div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <h2>Right Joystick</h2>
+            <div class="stick-container">
+                <div class="stick"><div class="stick-dot" id="dot-r"></div></div>
+            </div>
+        </div>
     </div>
 </body>
 </html>
