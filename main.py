@@ -40,7 +40,7 @@ if cap.isOpened():
                 set_web_status(f"Pressed: {button.upper()}")
             gesture_active = True
 
-        elif not elbow_raised and gesture_active:
+        elif (not elbow_raised) and gesture_active:
             gesture_active = False
             set_web_status("Waiting for gesture...")
 

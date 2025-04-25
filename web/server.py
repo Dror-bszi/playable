@@ -31,8 +31,7 @@ from evdev import InputDevice, categorize, ecodes, list_devices
 
 @app.route("/controller_status")
 def controller_status():
-    return render_template("controller_status.html", status=get_status())
-
+    return jsonify(get_status())
 
 
 @app.route("/scan_bluetooth", methods=["POST"])
