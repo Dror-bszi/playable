@@ -29,9 +29,14 @@ def controller():
 
 from evdev import InputDevice, categorize, ecodes, list_devices
 
+@app.route("/controller_status_page")
+def controller_status_page():
+    return render_template("controller_status.html")
+
 @app.route("/controller_status")
-def controller_status():
+def controller_status_data():
     return jsonify(get_status())
+
 
 
 
