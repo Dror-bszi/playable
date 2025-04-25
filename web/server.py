@@ -34,7 +34,7 @@ def controller_status():
         devices = [InputDevice(path) for path in list_devices()]
         controller = None
         for d in devices:
-            if 'DualSense' in d.name:
+            if 'DualSense Wireless Controller' in d.name and 'Touchpad' not in d.name and 'Motion' not in d.name:
                 controller = d
                 break
 
