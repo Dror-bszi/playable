@@ -60,7 +60,8 @@
             try {
                 const res = await fetch("/controller_status");
                 const data = await res.json();
-                document.getElementById("device-path").textContent = data.device_path;
+
+                document.getElementById("device-path").textContent = data.device_path || "Not detected";
 
                 const buttonsContainer = document.getElementById("buttons");
                 const allButtons = ["KEY_304", "KEY_305", "KEY_307", "KEY_308", "KEY_310", "KEY_311", "KEY_312", "KEY_313"];
@@ -68,23 +69,23 @@
                 allButtons.forEach(btn => {
                     const span = document.createElement("span");
                     span.textContent = btn;
-                    if (data.buttons.includes(btn)) span.classList.add("active");
+                    if (data.buttons && data.buttons.includes(btn)) span.classList.add("active");
                     buttonsContainer.appendChild(span);
                 });
 
-                document.getElementById("l2-bar").style.width = `${(data.l2 / 255) * 100}%`;
-                document.getElementById("r2-bar").style.width = `${(data.r2 / 255) * 100}%`;
-                document.getElementById("lx").textContent = data.lx;
-                document.getElementById("ly").textContent = data.ly;
-                document.getElementById("rx").textContent = data.rx;
-                document.getElementById("ry").textContent = data.ry;
+                document.getElementById("l2-bar").style.width = `${(data.l2 || 0) / 255 * 100}%`;
+                document.getElementById("r2-bar").style.width = `${(data.r2 || 0) / 255 * 100}%`;
+                document.getElementById("lx").textContent = data.lx || 0;
+                document.getElementById("ly").textContent = data.ly || 0;
+                document.getElementById("rx").textContent = data.rx || 0;
+                document.getElementById("ry").textContent = data.ry || 0;
 
             } catch (err) {
-                document.getElementById("device-path").textContent = "❌ Error fetching controller input.";
+                document.getElementById("device-path").textContent = "❌ Controller not connected.";
             }
         }
 
-        setInterval(fetchStatus, 300);
+        setInterval(fetchStatus, 500);
         window.onload = fetchStatus;
     </script>
 </head>
@@ -113,12 +114,12 @@
         <strong>Joystick Positions</strong>
         <div class="joystick">
             <div>
-                <div>Left X: <span id="lx"></span></div>
-                <div>Left Y: <span id="ly"></span></div>
+                <div>Left X: <span id="lx">0</span></div>
+                <div>Left Y: <span id="ly">0</span></div>
             </div>
             <div>
-                <div>Right X: <span id="rx"></span></div>
-                <div>Right Y: <span id="ry"></span></div>
+                <div>Right X: <span id="rx">0</span></div>
+                <div>Right Y: <span id="ry">0</span></div>
             </div>
         </div>
     </div>
