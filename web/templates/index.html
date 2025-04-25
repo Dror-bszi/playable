@@ -1,33 +1,127 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>PlayAble - Web Dashboard</title>
+    <title>PlayAble - Live Controller Input</title>
     <style>
-        body { font-family: Arial; text-align: center; margin-top: 40px; }
-        h1 { font-size: 2rem; }
-        img { border: 2px solid black; margin-top: 20px; }
-        button { padding: 10px 20px; font-size: 1rem; margin-top: 30px; cursor: pointer; }
-        a.button-link {
-            display: inline-block;
-            padding: 10px 20px;
-            margin-top: 20px;
-            background-color: #007BFF;
-            color: white;
+        body {
+            font-family: Arial, sans-serif;
+            padding: 2em;
+            background-color: #f0f0f0;
+        }
+        h1 {
+            margin-bottom: 1em;
+        }
+        .button-link {
             text-decoration: none;
+            color: #007bff;
+            margin-bottom: 1em;
+            display: inline-block;
+        }
+        .panel {
+            background-color: #fff;
+            padding: 1em;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            margin-bottom: 1em;
+        }
+        .bar {
+            height: 20px;
+            background-color: #007bff;
+            transition: width 0.3s;
+        }
+        .bar-container {
+            width: 100%;
+            background-color: #ddd;
             border-radius: 4px;
-            margin-right: 10px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+        .buttons span {
+            display: inline-block;
+            margin: 4px;
+            padding: 6px 12px;
+            border: 1px solid #333;
+            border-radius: 4px;
+            background-color: #eee;
+        }
+        .buttons span.active {
+            background-color: #28a745;
+            color: #fff;
+            font-weight: bold;
+        }
+        .joystick {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 1em;
         }
     </style>
+    <script>
+        async function fetchStatus() {
+            try {
+                const res = await fetch("/controller_status");
+                const data = await res.json();
+
+                document.getElementById("device-path").textContent = data.device_path ?? "Not detected";
+
+                const buttonsContainer = document.getElementById("buttons");
+                const allButtons = ["KEY_304", "KEY_305", "KEY_307", "KEY_308", "KEY_310", "KEY_311", "KEY_312", "KEY_313"];
+                buttonsContainer.innerHTML = "";
+                allButtons.forEach(btn => {
+                    const span = document.createElement("span");
+                    span.textContent = btn;
+                    if (data.buttons && data.buttons.includes(btn)) span.classList.add("active");
+                    buttonsContainer.appendChild(span);
+                });
+
+                document.getElementById("l2-bar").style.width = `${(data.l2 ?? 0) / 255 * 100}%`;
+                document.getElementById("r2-bar").style.width = `${(data.r2 ?? 0) / 255 * 100}%`;
+                document.getElementById("lx").textContent = data.lx ?? 0;
+                document.getElementById("ly").textContent = data.ly ?? 0;
+                document.getElementById("rx").textContent = data.rx ?? 0;
+                document.getElementById("ry").textContent = data.ry ?? 0;
+
+            } catch (err) {
+                document.getElementById("device-path").textContent = "❌ Controller not connected.";
+            }
+        }
+
+        setInterval(fetchStatus, 500);
+        window.onload = fetchStatus;
+    </script>
 </head>
 <body>
-    <h1>{{ status }}</h1>
-    <img src="/video_feed" width="480" />
-    <br>
-    <form action="/shutdown" method="get">
-        <button type="submit">Shut Down</button>
-    </form>
-    <br>
-    <a href="/controller" class="button-link">Controller Setup</a>
-    <a href="/controller_status" class="button-link">🎮 Live Controller View</a>
+    <h1>🎮 Live Controller Monitor</h1>
+    <a href="/" class="button-link">&larr; Back to Dashboard</a>
+
+    <div class="panel">
+        <strong>Device Path:</strong> <span id="device-path">Loading...</span>
+    </div>
+
+    <div class="panel">
+        <strong>Pressed Buttons:</strong>
+        <div class="buttons" id="buttons"></div>
+    </div>
+
+    <div class="panel">
+        <strong>L2 Trigger</strong>
+        <div class="bar-container"><div id="l2-bar" class="bar" style="width:0%"></div></div>
+
+        <strong>R2 Trigger</strong>
+        <div class="bar-container"><div id="r2-bar" class="bar" style="width:0%"></div></div>
+    </div>
+
+    <div class="panel">
+        <strong>Joystick Positions</strong>
+        <div class="joystick">
+            <div>
+                <div>Left X: <span id="lx">0</span></div>
+                <div>Left Y: <span id="ly">0</span></div>
+            </div>
+            <div>
+                <div>Right X: <span id="rx">0</span></div>
+                <div>Right Y: <span id="ry">0</span></div>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
