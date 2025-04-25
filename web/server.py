@@ -26,27 +26,35 @@ def controller():
 def live_input():
     return render_template("controller_status.html")
 
+from evdev import InputDevice, categorize, ecodes, list_devices
+
 @app.route("/controller_status")
 def controller_status():
     try:
-        from pydualsense import pydualsense
-        ds = pydualsense()
-        ds.init()
+        devices = [InputDevice(path) for path in list_devices()]
+        controller = None
+        for d in devices:
+            if 'DualSense' in d.name:
+                controller = d
+                break
 
-        state = {
+        if not controller:
+            return jsonify({"connected": False, "error": "No DualSense controller found"})
+
+        # Open the device in non-blocking mode and get basic data
+        info = {
             "connected": True,
-            "buttons": ds.state.buttons.__dict__,
-            "l2": ds.state.L2,
-            "r2": ds.state.R2,
-            "lx": ds.state.LX,
-            "ly": ds.state.LY,
-            "rx": ds.state.RX,
-            "ry": ds.state.RY
+            "device_path": controller.path,
+            "name": controller.name,
+            "inputs": []
         }
-        return jsonify(state)
+
+        # We won't listen in real-time here — just return metadata
+        return jsonify(info)
 
     except Exception as e:
         return jsonify({"connected": False, "error": str(e)})
+
 
 @app.route("/scan_bluetooth", methods=["POST"])
 def scan():
