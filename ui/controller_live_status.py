@@ -20,29 +20,32 @@ def _monitor_device(dev_path):
         dev = InputDevice(dev_path)
         status["connected"] = True
         status["error"] = None
+
         for event in dev.read_loop():
-            if event.type == ecodes.EV_KEY:
-                key = ecodes.KEY[event.code]
-                if event.value == 1:
-                    status["buttons"].add(key)
-                elif event.value == 0:
-                    status["buttons"].discard(key)
-            elif event.type == ecodes.EV_ABS:
-                absevent = categorize(event)
-                code = absevent.event.code
-                value = absevent.event.value
-                if code == ecodes.ABS_Z:
-                    status["l2"] = value
-                elif code == ecodes.ABS_RZ:
-                    status["r2"] = value
-                elif code == ecodes.ABS_X:
-                    status["lx"] = value
-                elif code == ecodes.ABS_Y:
-                    status["ly"] = value
-                elif code == ecodes.ABS_RX:
-                    status["rx"] = value
-                elif code == ecodes.ABS_RY:
-                    status["ry"] = value
+            try:
+                if event.type == ecodes.EV_KEY:
+                    key = ecodes.KEY[event.code]
+                    if event.value == 1:
+                        status["buttons"].add(key)
+                    elif event.value == 0:
+                        status["buttons"].discard(key)
+                elif event.type == ecodes.EV_ABS:
+                    code = event.code
+                    value = event.value
+                    if code == ecodes.ABS_Z:
+                        status["l2"] = value
+                    elif code == ecodes.ABS_RZ:
+                        status["r2"] = value
+                    elif code == ecodes.ABS_X:
+                        status["lx"] = value
+                    elif code == ecodes.ABS_Y:
+                        status["ly"] = value
+                    elif code == ecodes.ABS_RX:
+                        status["rx"] = value
+                    elif code == ecodes.ABS_RY:
+                        status["ry"] = value
+            except Exception as nested_e:
+                status["error"] = f"event error: {str(nested_e)}"
     except Exception as e:
         status["connected"] = False
         status["error"] = str(e)
