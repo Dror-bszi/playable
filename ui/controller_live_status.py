@@ -1,53 +1,67 @@
-# ui/controller_live_status.py
-from evdev import InputDevice, categorize, ecodes, list_devices
 import threading
+from evdev import InputDevice, categorize, ecodes, list_devices
 
 status = {
-    "buttons": {},
-    "l2_value": 0,
-    "r2_value": 0,
-    "left_joystick": (0, 0),
-    "right_joystick": (0, 0)
+    "connected": False,
+    "device_path": None,
+    "buttons": set(),
+    "l2": 0,
+    "r2": 0,
+    "lx": 0,
+    "ly": 0,
+    "rx": 0,
+    "ry": 0
 }
 
-def find_dualsense():
-    for path in list_devices():
-        dev = InputDevice(path)
-        if "Wireless Controller" in dev.name or "DualSense" in dev.name:
-            return dev
-    return None
-
-def start_controller_monitor():
-    dev = find_dualsense()
-    if not dev:
-        print("[ERROR] DualSense not found via evdev.")
-        return
-
-    def monitor():
+def _monitor_device(dev_path):
+    global status
+    try:
+        dev = InputDevice(dev_path)
+        status["connected"] = True
         for event in dev.read_loop():
             if event.type == ecodes.EV_KEY:
                 key = ecodes.KEY[event.code]
-                status["buttons"][key] = bool(event.value)
+                if event.value == 1:  # Pressed
+                    status["buttons"].add(key)
+                elif event.value == 0:  # Released
+                    status["buttons"].discard(key)
             elif event.type == ecodes.EV_ABS:
-                if event.code == ecodes.ABS_Z:
-                    status["l2_value"] = event.value
-                elif event.code == ecodes.ABS_RZ:
-                    status["r2_value"] = event.value
-                elif event.code == ecodes.ABS_X:
-                    x = event.value
-                    status["left_joystick"] = (x, status["left_joystick"][1])
-                elif event.code == ecodes.ABS_Y:
-                    y = event.value
-                    status["left_joystick"] = (status["left_joystick"][0], y)
-                elif event.code == ecodes.ABS_RX:
-                    x = event.value
-                    status["right_joystick"] = (x, status["right_joystick"][1])
-                elif event.code == ecodes.ABS_RY:
-                    y = event.value
-                    status["right_joystick"] = (status["right_joystick"][0], y)
+                absevent = categorize(event)
+                if absevent.event.code == ecodes.ABS_Z:
+                    status["l2"] = absevent.event.value
+                elif absevent.event.code == ecodes.ABS_RZ:
+                    status["r2"] = absevent.event.value
+                elif absevent.event.code == ecodes.ABS_X:
+                    status["lx"] = absevent.event.value
+                elif absevent.event.code == ecodes.ABS_Y:
+                    status["ly"] = absevent.event.value
+                elif absevent.event.code == ecodes.ABS_RX:
+                    status["rx"] = absevent.event.value
+                elif absevent.event.code == ecodes.ABS_RY:
+                    status["ry"] = absevent.event.value
+    except Exception as e:
+        status["connected"] = False
+        status["error"] = str(e)
 
-    thread = threading.Thread(target=monitor, daemon=True)
-    thread.start()
+def start_controller_monitor():
+    devices = [InputDevice(path) for path in list_devices()]
+    for d in devices:
+        if 'DualSense Wireless Controller' in d.name and 'Touchpad' not in d.name and 'Motion' not in d.name:
+            status["device_path"] = d.path
+            threading.Thread(target=_monitor_device, args=(d.path,), daemon=True).start()
+            return True
+    status["error"] = "DualSense controller not found"
+    return False
 
 def get_status():
-    return status
+    return {
+        "connected": status["connected"],
+        "device_path": status["device_path"],
+        "buttons": list(status["buttons"]),
+        "l2": status["l2"],
+        "r2": status["r2"],
+        "lx": status["lx"],
+        "ly": status["ly"],
+        "rx": status["rx"],
+        "ry": status["ry"]
+    }

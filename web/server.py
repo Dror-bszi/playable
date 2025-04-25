@@ -3,6 +3,10 @@ import threading
 import cv2
 import time
 from ui import controller_bluetooth
+from ui.controller_live_status import start_controller_monitor, get_status
+
+# Start monitoring the controller at app launch
+start_controller_monitor()
 
 app = Flask(__name__)
 
@@ -30,30 +34,8 @@ from evdev import InputDevice, categorize, ecodes, list_devices
 
 @app.route("/controller_status")
 def controller_status():
-    try:
-        devices = [InputDevice(path) for path in list_devices()]
-        controller = None
-        for d in devices:
-            if 'DualSense Wireless Controller' in d.name and 'Touchpad' not in d.name and 'Motion' not in d.name:
-                controller = d
-                break
+    return jsonify(get_status())
 
-        if not controller:
-            return jsonify({"connected": False, "error": "No DualSense controller found"})
-
-        # Open the device in non-blocking mode and get basic data
-        info = {
-            "connected": True,
-            "device_path": controller.path,
-            "name": controller.name,
-            "inputs": []
-        }
-
-        # We won't listen in real-time here — just return metadata
-        return jsonify(info)
-
-    except Exception as e:
-        return jsonify({"connected": False, "error": str(e)})
 
 
 @app.route("/scan_bluetooth", methods=["POST"])

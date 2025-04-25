@@ -2,39 +2,58 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>PlayAble - Live Controller Input</title>
+    <title>Live Controller Status</title>
     <style>
         body { font-family: Arial, sans-serif; padding: 2em; background-color: #f0f0f0; }
         h1 { margin-bottom: 1em; }
-        .button-link { text-decoration: none; color: #007bff; margin-bottom: 1em; display: inline-block; }
-        pre {
-            background-color: #fff;
-            padding: 1em;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-            white-space: pre-wrap;
-            word-wrap: break-word;
-            font-size: 0.95rem;
-        }
+        .box { background: white; padding: 1em; border-radius: 8px; border: 1px solid #ccc; width: fit-content; margin: auto; }
+        .label { font-weight: bold; }
+        .row { margin: 0.5em 0; }
+        .button { display: inline-block; padding: 4px 10px; margin: 2px; background: #007bff; color: white; border-radius: 4px; font-size: 0.9em; }
+        .inactive { background: #cccccc; }
     </style>
     <script>
-        async function fetchStatus() {
+        async function updateStatus() {
             try {
                 const res = await fetch("/controller_status");
                 const data = await res.json();
-                document.getElementById("status").textContent = JSON.stringify(data, null, 2);
-            } catch (err) {
-                document.getElementById("status").textContent = "❌ Error fetching controller input.";
+                document.getElementById("connection").textContent = data.connected ? "✅ Connected" : "❌ Disconnected";
+                document.getElementById("device").textContent = data.device_path || "N/A";
+                document.getElementById("l2").textContent = data.l2;
+                document.getElementById("r2").textContent = data.r2;
+                document.getElementById("lx").textContent = data.lx;
+                document.getElementById("ly").textContent = data.ly;
+                document.getElementById("rx").textContent = data.rx;
+                document.getElementById("ry").textContent = data.ry;
+
+                const buttonList = ["KEY_C", "KEY_X", "KEY_Z", "KEY_A", "KEY_B", "KEY_Y", "BTN_TL", "BTN_TR", "BTN_SELECT", "BTN_START"];
+                const buttonContainer = document.getElementById("buttons");
+                buttonContainer.innerHTML = "";
+                for (let b of buttonList) {
+                    const btn = document.createElement("span");
+                    btn.className = "button" + (data.buttons.includes(b) ? "" : " inactive");
+                    btn.textContent = b;
+                    buttonContainer.appendChild(btn);
+                }
+
+            } catch (e) {
+                console.error("Controller status error:", e);
             }
         }
 
-        setInterval(fetchStatus, 500);
-        window.onload = fetchStatus;
+        setInterval(updateStatus, 500);
+        window.onload = updateStatus;
     </script>
 </head>
 <body>
-    <h1>Live Controller Status</h1>
-    <a href="/" class="button-link">&larr; Back to Dashboard</a>
-    <pre id="status">Loading...</pre>
+    <h1>🎮 Live Controller Input</h1>
+    <div class="box">
+        <div class="row"><span class="label">Connection:</span> <span id="connection"></span></div>
+        <div class="row"><span class="label">Device:</span> <span id="device"></span></div>
+        <div class="row"><span class="label">L2:</span> <span id="l2"></span> | <span class="label">R2:</span> <span id="r2"></span></div>
+        <div class="row"><span class="label">Left Stick:</span> (<span id="lx"></span>, <span id="ly"></span>)</div>
+        <div class="row"><span class="label">Right Stick:</span> (<span id="rx"></span>, <span id="ry"></span>)</div>
+        <div class="row"><span class="label">Buttons:</span> <div id="buttons"></div></div>
+    </div>
 </body>
 </html>
