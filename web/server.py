@@ -14,18 +14,20 @@ log_dir = "logs"
 os.makedirs(log_dir, exist_ok=True)
 log_path = os.path.join(log_dir, "playable_web.log")
 
-handler = RotatingFileHandler(log_path, maxBytes=1000000, backupCount=3)
+handler = RotatingFileHandler(log_path, maxBytes=1_000_000, backupCount=3)
 handler.setLevel(logging.INFO)
 formatter = logging.Formatter("[%(asctime)s] [%(levelname)s] %(message)s", "%Y-%m-%d %H:%M:%S")
 handler.setFormatter(formatter)
 
 app = Flask(__name__)
-app.logger.handlers = [handler]
+app.logger.addHandler(handler)
 app.logger.setLevel(logging.INFO)
+app.logger.propagate = False  # ⛔️ prevents duplicate or silent logs
 
 werkzeug_logger = logging.getLogger("werkzeug")
-werkzeug_logger.setLevel(logging.ERROR)
-werkzeug_logger.handlers = [handler]
+werkzeug_logger.setLevel(logging.INFO)
+werkzeug_logger.addHandler(handler)
+werkzeug_logger.propagate = False
 
 # ─── Start Controller Monitor ─────────────────────────────
 start_controller_monitor()
