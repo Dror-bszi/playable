@@ -61,20 +61,44 @@
                 const res = await fetch("/controller_status");
                 const data = await res.json();
 
-                // ✅ NEW: show connected / not connected
                 if (data.connected) {
                     document.getElementById("device-path").textContent = `✅ ${data.device_path}`;
                 } else {
                     document.getElementById("device-path").textContent = "❌ Controller not connected.";
                 }
 
+                const allButtons = [
+                    "KEY_304", "KEY_305", "KEY_307", "KEY_308", 
+                    "KEY_310", "KEY_311", "KEY_312", "KEY_313",
+                    "KEY_544", "KEY_545", "KEY_546", "KEY_547",
+                    "KEY_317", "KEY_318"
+                ];
+
+                const buttonNames = {
+                    "KEY_304": "❌ Cross",
+                    "KEY_305": "⭕ Circle",
+                    "KEY_307": "🟥 Square",
+                    "KEY_308": "🔺 Triangle",
+                    "KEY_310": "L1",
+                    "KEY_311": "R1",
+                    "KEY_312": "L2",
+                    "KEY_313": "R2",
+                    "KEY_544": "⬆️ D-Pad Up",
+                    "KEY_545": "⬇️ D-Pad Down",
+                    "KEY_546": "⬅️ D-Pad Left",
+                    "KEY_547": "➡️ D-Pad Right",
+                    "KEY_317": "L3 (Press Left Stick)",
+                    "KEY_318": "R3 (Press Right Stick)"
+                };
+
                 const buttonsContainer = document.getElementById("buttons");
-                const allButtons = ["KEY_304", "KEY_305", "KEY_307", "KEY_308", "KEY_310", "KEY_311", "KEY_312", "KEY_313"];
                 buttonsContainer.innerHTML = "";
                 allButtons.forEach(btn => {
                     const span = document.createElement("span");
-                    span.textContent = btn;
-                    if (data.buttons && data.buttons.includes(btn)) span.classList.add("active");
+                    span.textContent = buttonNames[btn] || btn;
+                    if (data.buttons && data.buttons.includes(btn)) {
+                        span.classList.add("active");
+                    }
                     buttonsContainer.appendChild(span);
                 });
 
