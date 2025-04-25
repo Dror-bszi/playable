@@ -36,22 +36,22 @@ def _monitor_device(dev_path):
                     print(f"[DEBUG] ⚪ Button Released: {key}")
                     status["buttons"].discard(key)
 
-            elif event.type == ecodes.EV_ABS:
-                code = event.code
-                value = event.value
-                if code == ecodes.ABS_Z:
-                    status["l2"] = value
-                elif code == ecodes.ABS_RZ:
-                    status["r2"] = value
-                elif code == ecodes.ABS_X:
-                    status["lx"] = value
-                elif code == ecodes.ABS_Y:
-                    status["ly"] = value
-                elif code == ecodes.ABS_RX:
-                    status["rx"] = value
-                elif code == ecodes.ABS_RY:
-                    status["ry"] = value
-                print(f"[DEBUG] 🎮 ABS {code} = {value}")
+            # elif event.type == ecodes.EV_ABS:
+            #     code = event.code
+            #     value = event.value
+            #     if code == ecodes.ABS_Z:
+            #         status["l2"] = value
+            #     elif code == ecodes.ABS_RZ:
+            #         status["r2"] = value
+            #     elif code == ecodes.ABS_X:
+            #         status["lx"] = value
+            #     elif code == ecodes.ABS_Y:
+            #         status["ly"] = value
+            #     elif code == ecodes.ABS_RX:
+            #         status["rx"] = value
+            #     elif code == ecodes.ABS_RY:
+            #         status["ry"] = value
+            #     print(f"[DEBUG] 🎮 ABS {code} = {value}")
 
     except Exception as e:
         status["connected"] = False
