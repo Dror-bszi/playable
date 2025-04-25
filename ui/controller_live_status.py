@@ -1,5 +1,5 @@
 import threading
-from evdev import InputDevice, categorize, ecodes, list_devices
+from evdev import InputDevice, ecodes, list_devices
 
 status = {
     "connected": False,
@@ -18,7 +18,6 @@ def _monitor_device(dev_path):
     global status
     try:
         dev = InputDevice(dev_path)
-        print(f"[DEBUG] 🎮 Monitoring device: {dev.name} ({dev.path})")
         status["connected"] = True
         status["error"] = None
 
@@ -30,15 +29,14 @@ def _monitor_device(dev_path):
                     key = f"KEY_{event.code}"
 
                 if event.value == 1:
-                    print(f"[DEBUG] 🔘 Button Pressed: {key}")
                     status["buttons"].add(key)
                 elif event.value == 0:
-                    print(f"[DEBUG] ⚪ Button Released: {key}")
                     status["buttons"].discard(key)
 
             elif event.type == ecodes.EV_ABS:
                 code = event.code
                 value = event.value
+
                 if code == ecodes.ABS_Z:
                     status["l2"] = value
                 elif code == ecodes.ABS_RZ:
@@ -51,12 +49,33 @@ def _monitor_device(dev_path):
                     status["rx"] = value
                 elif code == ecodes.ABS_RY:
                     status["ry"] = value
-                print(f"[DEBUG] 🎮 ABS {code} = {value}")
+
+                # Handle D-Pad via ABS hat switch values
+                elif code == ecodes.ABS_HAT0X:
+                    if value == -1:
+                        status["buttons"].add("DPAD_LEFT")
+                        status["buttons"].discard("DPAD_RIGHT")
+                    elif value == 1:
+                        status["buttons"].add("DPAD_RIGHT")
+                        status["buttons"].discard("DPAD_LEFT")
+                    else:
+                        status["buttons"].discard("DPAD_LEFT")
+                        status["buttons"].discard("DPAD_RIGHT")
+
+                elif code == ecodes.ABS_HAT0Y:
+                    if value == -1:
+                        status["buttons"].add("DPAD_UP")
+                        status["buttons"].discard("DPAD_DOWN")
+                    elif value == 1:
+                        status["buttons"].add("DPAD_DOWN")
+                        status["buttons"].discard("DPAD_UP")
+                    else:
+                        status["buttons"].discard("DPAD_UP")
+                        status["buttons"].discard("DPAD_DOWN")
 
     except Exception as e:
         status["connected"] = False
         status["error"] = str(e)
-        print(f"[ERROR] Controller monitoring failed: {e}")
 
 def start_controller_monitor():
     devices = [InputDevice(path) for path in list_devices()]
@@ -67,7 +86,6 @@ def start_controller_monitor():
             return True
     status["connected"] = False
     status["error"] = "DualSense controller not found"
-    print("[ERROR] No matching DualSense controller found.")
     return False
 
 def get_status():

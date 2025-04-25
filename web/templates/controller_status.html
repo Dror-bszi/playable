@@ -70,25 +70,25 @@
                 const allButtons = [
                     "KEY_304", "KEY_305", "KEY_307", "KEY_308", 
                     "KEY_310", "KEY_311", "KEY_312", "KEY_313",
-                    "KEY_544", "KEY_545", "KEY_546", "KEY_547",
-                    "KEY_317", "KEY_318"
+                    "KEY_317", "KEY_318",
+                    "DPAD_UP", "DPAD_DOWN", "DPAD_LEFT", "DPAD_RIGHT"
                 ];
 
                 const buttonNames = {
                     "KEY_304": "❌ Cross",
                     "KEY_305": "⭕ Circle",
-                    "KEY_307": "🟥 Square",
-                    "KEY_308": "🔺 Triangle",
+                    "KEY_307": "🔺 Triangle",  // ✅ fixed
+                    "KEY_308": "🟥 Square",    // ✅ fixed
                     "KEY_310": "L1",
                     "KEY_311": "R1",
                     "KEY_312": "L2",
                     "KEY_313": "R2",
-                    "KEY_544": "⬆️ D-Pad Up",
-                    "KEY_545": "⬇️ D-Pad Down",
-                    "KEY_546": "⬅️ D-Pad Left",
-                    "KEY_547": "➡️ D-Pad Right",
                     "KEY_317": "L3 (Press Left Stick)",
-                    "KEY_318": "R3 (Press Right Stick)"
+                    "KEY_318": "R3 (Press Right Stick)",
+                    "DPAD_UP": "⬆️ D-Pad Up",
+                    "DPAD_DOWN": "⬇️ D-Pad Down",
+                    "DPAD_LEFT": "⬅️ D-Pad Left",
+                    "DPAD_RIGHT": "➡️ D-Pad Right"
                 };
 
                 const buttonsContainer = document.getElementById("buttons");
@@ -114,7 +114,7 @@
             }
         }
 
-        setInterval(fetchStatus, 500);
+        setInterval(fetchStatus, 300);
         window.onload = fetchStatus;
     </script>
 </head>
