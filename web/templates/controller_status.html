@@ -61,7 +61,7 @@
                 const res = await fetch("/controller_status");
                 const data = await res.json();
 
-                document.getElementById("device-path").textContent = data.device_path || "Not detected";
+                document.getElementById("device-path").textContent = data.device_path ?? "Not detected";
 
                 const buttonsContainer = document.getElementById("buttons");
                 const allButtons = ["KEY_304", "KEY_305", "KEY_307", "KEY_308", "KEY_310", "KEY_311", "KEY_312", "KEY_313"];
@@ -73,12 +73,12 @@
                     buttonsContainer.appendChild(span);
                 });
 
-                document.getElementById("l2-bar").style.width = `${(data.l2 || 0) / 255 * 100}%`;
-                document.getElementById("r2-bar").style.width = `${(data.r2 || 0) / 255 * 100}%`;
-                document.getElementById("lx").textContent = data.lx || 0;
-                document.getElementById("ly").textContent = data.ly || 0;
-                document.getElementById("rx").textContent = data.rx || 0;
-                document.getElementById("ry").textContent = data.ry || 0;
+                document.getElementById("l2-bar").style.width = `${(data.l2 ?? 0) / 255 * 100}%`;
+                document.getElementById("r2-bar").style.width = `${(data.r2 ?? 0) / 255 * 100}%`;
+                document.getElementById("lx").textContent = data.lx ?? 0;
+                document.getElementById("ly").textContent = data.ly ?? 0;
+                document.getElementById("rx").textContent = data.rx ?? 0;
+                document.getElementById("ry").textContent = data.ry ?? 0;
 
             } catch (err) {
                 document.getElementById("device-path").textContent = "❌ Controller not connected.";
