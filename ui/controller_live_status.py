@@ -1,7 +1,6 @@
 # ui/controller_live_status.py
-from pydualsense import pydualsense
+from evdev import InputDevice, categorize, ecodes, list_devices
 import threading
-import time
 
 status = {
     "buttons": {},
@@ -11,32 +10,43 @@ status = {
     "right_joystick": (0, 0)
 }
 
+def find_dualsense():
+    for path in list_devices():
+        dev = InputDevice(path)
+        if "Wireless Controller" in dev.name or "DualSense" in dev.name:
+            return dev
+    return None
+
 def start_controller_monitor():
-    ds = pydualsense()
-    ds.init()
+    dev = find_dualsense()
+    if not dev:
+        print("[ERROR] DualSense not found via evdev.")
+        return
 
-    def on_state():
-        status["buttons"] = {
-            "cross": ds.cross,
-            "circle": ds.circle,
-            "square": ds.square,
-            "triangle": ds.triangle,
-            "l1": ds.l1,
-            "r1": ds.r1,
-            "l2": ds.l2,
-            "r2": ds.r2,
-            "options": ds.options,
-            "share": ds.share
-        }
-        status["l2_value"] = ds.L2
-        status["r2_value"] = ds.R2
-        status["left_joystick"] = (ds.LX, ds.LY)
-        status["right_joystick"] = (ds.RX, ds.RY)
+    def monitor():
+        for event in dev.read_loop():
+            if event.type == ecodes.EV_KEY:
+                key = ecodes.KEY[event.code]
+                status["buttons"][key] = bool(event.value)
+            elif event.type == ecodes.EV_ABS:
+                if event.code == ecodes.ABS_Z:
+                    status["l2_value"] = event.value
+                elif event.code == ecodes.ABS_RZ:
+                    status["r2_value"] = event.value
+                elif event.code == ecodes.ABS_X:
+                    x = event.value
+                    status["left_joystick"] = (x, status["left_joystick"][1])
+                elif event.code == ecodes.ABS_Y:
+                    y = event.value
+                    status["left_joystick"] = (status["left_joystick"][0], y)
+                elif event.code == ecodes.ABS_RX:
+                    x = event.value
+                    status["right_joystick"] = (x, status["right_joystick"][1])
+                elif event.code == ecodes.ABS_RY:
+                    y = event.value
+                    status["right_joystick"] = (status["right_joystick"][0], y)
 
-    ds.setLedOption(pydualsense.LedOption.PulseBlue)
-    ds.update += on_state
-
-    thread = threading.Thread(target=ds.listen, daemon=True)
+    thread = threading.Thread(target=monitor, daemon=True)
     thread.start()
 
 def get_status():
