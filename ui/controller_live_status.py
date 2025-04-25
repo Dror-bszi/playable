@@ -10,7 +10,8 @@ status = {
     "lx": 0,
     "ly": 0,
     "rx": 0,
-    "ry": 0
+    "ry": 0,
+    "error": None
 }
 
 def _monitor_device(dev_path):
@@ -18,27 +19,30 @@ def _monitor_device(dev_path):
     try:
         dev = InputDevice(dev_path)
         status["connected"] = True
+        status["error"] = None
         for event in dev.read_loop():
             if event.type == ecodes.EV_KEY:
                 key = ecodes.KEY[event.code]
-                if event.value == 1:  # Pressed
+                if event.value == 1:
                     status["buttons"].add(key)
-                elif event.value == 0:  # Released
+                elif event.value == 0:
                     status["buttons"].discard(key)
             elif event.type == ecodes.EV_ABS:
                 absevent = categorize(event)
-                if absevent.event.code == ecodes.ABS_Z:
-                    status["l2"] = absevent.event.value
-                elif absevent.event.code == ecodes.ABS_RZ:
-                    status["r2"] = absevent.event.value
-                elif absevent.event.code == ecodes.ABS_X:
-                    status["lx"] = absevent.event.value
-                elif absevent.event.code == ecodes.ABS_Y:
-                    status["ly"] = absevent.event.value
-                elif absevent.event.code == ecodes.ABS_RX:
-                    status["rx"] = absevent.event.value
-                elif absevent.event.code == ecodes.ABS_RY:
-                    status["ry"] = absevent.event.value
+                code = absevent.event.code
+                value = absevent.event.value
+                if code == ecodes.ABS_Z:
+                    status["l2"] = value
+                elif code == ecodes.ABS_RZ:
+                    status["r2"] = value
+                elif code == ecodes.ABS_X:
+                    status["lx"] = value
+                elif code == ecodes.ABS_Y:
+                    status["ly"] = value
+                elif code == ecodes.ABS_RX:
+                    status["rx"] = value
+                elif code == ecodes.ABS_RY:
+                    status["ry"] = value
     except Exception as e:
         status["connected"] = False
         status["error"] = str(e)
@@ -50,6 +54,7 @@ def start_controller_monitor():
             status["device_path"] = d.path
             threading.Thread(target=_monitor_device, args=(d.path,), daemon=True).start()
             return True
+    status["connected"] = False
     status["error"] = "DualSense controller not found"
     return False
 
@@ -63,5 +68,6 @@ def get_status():
         "lx": status["lx"],
         "ly": status["ly"],
         "rx": status["rx"],
-        "ry": status["ry"]
+        "ry": status["ry"],
+        "error": status["error"]
     }
