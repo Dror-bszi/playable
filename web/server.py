@@ -26,15 +26,12 @@ def controller():
     global devices, connected_device
     return render_template("controller.html", devices=devices, connected=connected_device)
 
-@app.route("/live_input")
-def live_input():
-    return render_template("controller_status.html")
 
 from evdev import InputDevice, categorize, ecodes, list_devices
 
 @app.route("/controller_status")
 def controller_status():
-    return jsonify(get_status())
+    return render_template("controller_status.html", status=get_status())
 
 
 
