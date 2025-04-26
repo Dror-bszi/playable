@@ -10,16 +10,61 @@ from remote.device_merger import start_device_merging
 from ui import controller_bluetooth
 from ui.controller_live_status import start_controller_monitor, get_status
 
-camera_index = 0  # Default fallback
+# ─── Create Flask App Immediately ───────────────────────────
+app = Flask(__name__)
 
+# ─── Global Variables ───────────────────────────────────────
+camera_index = 0  # Default fallback
+status = "Waiting..."
+shutdown_flag = False
+devices = []
+connected_device = None
+gesture_mappings = {}
+
+# ─── Setter Functions ───────────────────────────────────────
 def set_camera_index(index):
     global camera_index
     camera_index = index
 
+def set_web_status(message):
+    global status
+    status = message
+
+def should_shutdown():
+    return shutdown_flag
+
+# ─── Logging Configuration ──────────────────────────────────
+log_dir = "logs"
+os.makedirs(log_dir, exist_ok=True)
+log_path = os.path.join(log_dir, "playable_web.log")
+
+handler = RotatingFileHandler(log_path, maxBytes=1_000_000, backupCount=3)
+handler.setLevel(logging.INFO)
+formatter = logging.Formatter("[%(asctime)s] [%(levelname)s] %(message)s", "%Y-%m-%d %H:%M:%S")
+handler.setFormatter(formatter)
+
+app.logger.addHandler(handler)
+app.logger.setLevel(logging.INFO)
+app.logger.propagate = False
+
+werkzeug_logger = logging.getLogger("werkzeug")
+werkzeug_logger.setLevel(logging.INFO)
+werkzeug_logger.addHandler(handler)
+werkzeug_logger.propagate = False
+
+# ─── Start Controller Monitor ───────────────────────────────
+start_controller_monitor()
+
+# ─── Web Routes ─────────────────────────────────────────────
+
+@app.route("/")
+def dashboard():
+    return render_template("index.html", status=status)
+
 @app.route("/video_feed")
 def video_feed():
     def generate():
-        cap = cv2.VideoCapture(camera_index)  # ✅ use dynamic index
+        cap = cv2.VideoCapture(camera_index)
         while True:
             success, frame = cap.read()
             if not success:
@@ -31,39 +76,17 @@ def video_feed():
         cap.release()
     return Response(generate(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
-# ─── Logging Configuration ───────────────────────────────
-log_dir = "logs"
-os.makedirs(log_dir, exist_ok=True)
-log_path = os.path.join(log_dir, "playable_web.log")
+@app.route("/controller")
+def controller():
+    return render_template("controller.html", devices=devices, connected=connected_device)
 
-handler = RotatingFileHandler(log_path, maxBytes=1_000_000, backupCount=3)
-handler.setLevel(logging.INFO)
-formatter = logging.Formatter("[%(asctime)s] [%(levelname)s] %(message)s", "%Y-%m-%d %H:%M:%S")
-handler.setFormatter(formatter)
+@app.route("/controller_status_page")
+def controller_status_page():
+    return render_template("controller_status.html")
 
-app = Flask(__name__)
-app.logger.addHandler(handler)
-app.logger.setLevel(logging.INFO)
-app.logger.propagate = False
-
-werkzeug_logger = logging.getLogger("werkzeug")
-werkzeug_logger.setLevel(logging.INFO)
-werkzeug_logger.addHandler(handler)
-werkzeug_logger.propagate = False
-
-# ─── Start Controller Monitor ─────────────────────────────
-start_controller_monitor()
-
-status = "Waiting..."
-shutdown_flag = False
-
-# Bluetooth state
-devices = []
-connected_device = None
-
-# ─── Routes ──────────────────────────────────────────────
-
-gesture_mappings = {}  # global mapping dictionary
+@app.route("/controller_status")
+def controller_status_data():
+    return jsonify(get_status())
 
 @app.route("/save_mapping", methods=["POST"])
 def save_mapping():
@@ -76,27 +99,6 @@ def save_mapping():
         print(f"[MAPPING] {button} ➔ {gesture}")
         return "OK", 200
     return "Bad Request", 400
-
-@app.route("/controller_mapping")
-def controller_mapping():
-    return render_template("mapping.html")
-
-@app.route("/")
-def dashboard():
-    return render_template("index.html", status=status)
-
-@app.route("/controller")
-def controller():
-    global devices, connected_device
-    return render_template("controller.html", devices=devices, connected=connected_device)
-
-@app.route("/controller_status_page")
-def controller_status_page():
-    return render_template("controller_status.html")
-
-@app.route("/controller_status")
-def controller_status_data():
-    return jsonify(get_status())
 
 @app.route("/scan_bluetooth", methods=["POST"])
 def scan():
@@ -111,7 +113,6 @@ def connect():
     success = controller_bluetooth.connect_device(mac)
     connected_device = mac if success else None
     return redirect("/controller")
-
 
 @app.route("/shutdown", methods=["POST"])
 def shutdown():
@@ -131,8 +132,6 @@ def start_merge():
         set_web_status(f"❌ Error: {str(e)}")
 
     return redirect(url_for('dashboard'))
-
-# ─── Chiaki PS5 Connection ─────────────────────────────────
 
 @app.route("/chiaki_connect")
 def chiaki_connect():
@@ -159,14 +158,6 @@ def start_chiaki():
     except Exception as e:
         return f"❌ Error starting Chiaki: {str(e)}"
 
-# ─── Server Control ────────────────────────────────────────
-
+# ─── Run Server ─────────────────────────────────────────────
 def run_server():
     app.run(host='0.0.0.0', port=5000)
-
-def set_web_status(message):
-    global status
-    status = message
-
-def should_shutdown():
-    return shutdown_flag

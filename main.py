@@ -1,26 +1,12 @@
-from core.gestures import GestureDetector, default_gestures
-from remote.output_bridge import press_button
-
-from web.server import run_server, set_web_status, should_shutdown, gesture_mappings, set_camera_index
-
-# --- Initialize Camera ---
-def find_working_camera():
-    for i in range(3):
-        cap = cv2.VideoCapture(i)
-        if cap.isOpened():
-            print(f"[INFO] Found working camera at index {i} (/dev/video{i})")
-            return cap, i
-        cap.release()
-    print("❌ ERROR: No working camera found.")
-    return None, None
-
-cap, camera_index = find_working_camera()
-set_camera_index(camera_index)  # ✅ Tell the web server which camera to use
-import cv2
-import threading
-import time
 import os
 import sys
+import time
+import cv2
+import threading
+
+from core.gestures import GestureDetector, default_gestures
+from remote.output_bridge import press_button
+from web.server import run_server, set_web_status, should_shutdown, gesture_mappings, set_camera_index
 
 # --- Permissions Check ---
 if os.geteuid() != 0:
@@ -39,8 +25,7 @@ def find_working_camera():
     return None, None
 
 cap, camera_index = find_working_camera()
-set_camera_index(camera_index)  # ✅ Tell the web server which camera to use
-
+set_camera_index(camera_index)
 
 # --- Start Web Server ---
 threading.Thread(target=run_server, daemon=True).start()
@@ -59,7 +44,7 @@ def gesture_detection_loop():
 
     set_web_status("Calibrate: Hold rest position...")
 
-    # Calibration
+    # Calibration Phase
     calibrated = False
     while not calibrated and not should_shutdown():
         ret, frame = cap.read()
@@ -73,8 +58,7 @@ def gesture_detection_loop():
         print("❌ Calibration failed.")
         return
 
-    set_web_status("Calibration complete!")
-    set_web_status("Start gesture detection")
+    set_web_status("Calibration complete! Start gesture detection")
 
     # Track which gestures are active
     gesture_active = {gesture: False for gesture in default_gestures}
@@ -86,12 +70,11 @@ def gesture_detection_loop():
             time.sleep(0.5)
             continue
 
-        # Only check gestures that have mappings
         for button_name, gesture_name in gesture_mappings.items():
             if gesture_name is None:
                 continue
 
-            # Detect the gesture
+            # Detect gesture
             is_detected = False
             if gesture_name == "left_elbow_raised_forward":
                 is_detected = detector.is_left_elbow_raised_forward(frame)
@@ -105,7 +88,7 @@ def gesture_detection_loop():
             if is_detected and not gesture_active.get(gesture_name, False):
                 print(f"[GESTURE] {gesture_name} detected! Pressing {button_name}")
                 set_web_status(f"Pressed: {button_name.upper()}")
-                press_button(button_name)  # ✅ Dynamic
+                press_button(button_name)
                 gesture_active[gesture_name] = True
 
             elif not is_detected and gesture_active.get(gesture_name, False):
