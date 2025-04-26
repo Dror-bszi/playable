@@ -1,5 +1,6 @@
 import threading
 from evdev import InputDevice, ecodes, list_devices
+from remote.device_merger import MERGED_DEVICE_PATH
 
 status = {
     "connected": False,
@@ -18,8 +19,10 @@ def _monitor_device(dev_path):
     global status
     try:
         dev = InputDevice(dev_path)
+        print(f"[INFO] Monitoring device: {dev_path}")
         status["connected"] = True
-        status["error"] = None
+        if not status["device_path"]:
+            status["device_path"] = dev_path
 
         for event in dev.read_loop():
             if event.type == ecodes.EV_KEY:
@@ -49,8 +52,6 @@ def _monitor_device(dev_path):
                     status["rx"] = value
                 elif code == ecodes.ABS_RY:
                     status["ry"] = value
-
-                # Handle D-Pad via ABS hat switch values
                 elif code == ecodes.ABS_HAT0X:
                     if value == -1:
                         status["buttons"].add("DPAD_LEFT")
@@ -61,7 +62,6 @@ def _monitor_device(dev_path):
                     else:
                         status["buttons"].discard("DPAD_LEFT")
                         status["buttons"].discard("DPAD_RIGHT")
-
                 elif code == ecodes.ABS_HAT0Y:
                     if value == -1:
                         status["buttons"].add("DPAD_UP")
@@ -74,19 +74,33 @@ def _monitor_device(dev_path):
                         status["buttons"].discard("DPAD_DOWN")
 
     except Exception as e:
+        print(f"[ERROR] Monitoring {dev_path} failed: {str(e)}")
         status["connected"] = False
         status["error"] = str(e)
 
 def start_controller_monitor():
+    found = False
+
+    # --- Real DualSense
     devices = [InputDevice(path) for path in list_devices()]
     for d in devices:
         if 'DualSense Wireless Controller' in d.name and 'Touchpad' not in d.name and 'Motion' not in d.name:
-            status["device_path"] = d.path
             threading.Thread(target=_monitor_device, args=(d.path,), daemon=True).start()
-            return True
-    status["connected"] = False
-    status["error"] = "DualSense controller not found"
-    return False
+            found = True
+            print(f"[INFO] Started monitor thread for real DualSense: {d.path}")
+            break
+
+    # --- Merged Controller
+    if MERGED_DEVICE_PATH and os.path.exists(MERGED_DEVICE_PATH):
+        threading.Thread(target=_monitor_device, args=(MERGED_DEVICE_PATH,), daemon=True).start()
+        found = True
+        print(f"[INFO] Started monitor thread for merged device: {MERGED_DEVICE_PATH}")
+    else:
+        print("[WARN] Merged device path not found or not ready yet.")
+
+    if not found:
+        status["connected"] = False
+        status["error"] = "No DualSense or merged device found"
 
 def get_status():
     return {
