@@ -25,6 +25,7 @@ def find_working_camera():
     return None, None
 
 cap, camera_index = find_working_camera()
+set_camera_index(camera_index)  # ✅ Tell the web server which camera to use
 
 
 # --- Start Web Server ---

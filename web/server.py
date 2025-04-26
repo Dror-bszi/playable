@@ -11,6 +11,27 @@ from ui import controller_bluetooth
 from ui.controller_live_status import start_controller_monitor, get_status
 from main import camera_index
 
+camera_index = 0  # Default fallback
+
+def set_camera_index(index):
+    global camera_index
+    camera_index = index
+
+@app.route("/video_feed")
+def video_feed():
+    def generate():
+        cap = cv2.VideoCapture(camera_index)  # ✅ use dynamic index
+        while True:
+            success, frame = cap.read()
+            if not success:
+                break
+            ret, buffer = cv2.imencode('.jpg', frame)
+            frame = buffer.tobytes()
+            yield (b'--frame\r\n'
+                   b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+        cap.release()
+    return Response(generate(), mimetype='multipart/x-mixed-replace; boundary=frame')
+
 # ─── Logging Configuration ───────────────────────────────
 log_dir = "logs"
 os.makedirs(log_dir, exist_ok=True)
@@ -92,20 +113,6 @@ def connect():
     connected_device = mac if success else None
     return redirect("/controller")
 
-@app.route("/video_feed")
-def video_feed():
-    def generate():
-        cap = cv2.VideoCapture(camera_index)  # ✅ use real camera index
-        while True:
-            success, frame = cap.read()
-            if not success:
-                break
-            ret, buffer = cv2.imencode('.jpg', frame)
-            frame = buffer.tobytes()
-            yield (b'--frame\r\n'
-                   b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
-        cap.release()
-    return Response(generate(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 @app.route("/shutdown", methods=["POST"])
 def shutdown():
