@@ -6,7 +6,7 @@ import os
 import logging
 import subprocess
 from logging.handlers import RotatingFileHandler
-from remote.device_merger import merge_and_block_controller
+from remote.device_merger import start_device_merging
 from ui import controller_bluetooth
 from ui.controller_live_status import start_controller_monitor, get_status
 
@@ -96,7 +96,7 @@ def shutdown():
 @app.route("/start_merge", methods=["POST"])
 def start_merge():
     try:
-        success, message = merge_and_block_controller()
+        success, message = start_device_merging()
         if success:
             set_web_status("✅ Merge completed successfully!")
         else:
