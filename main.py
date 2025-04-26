@@ -98,9 +98,13 @@ time.sleep(1)  # Wait for device ready
 
 def emulate_circle_press():
     print("[INFO] Emulating CIRCLE press...")
-    device.emit(BTN_CIRCLE, 1)  # Press
-    time.sleep(0.1)             # Hold
-    device.emit(BTN_CIRCLE, 0)  # Release
+    device.emit([
+        (BTN_CIRCLE, 1)
+    ])  # Press
+    time.sleep(0.1)
+    device.emit([
+        (BTN_CIRCLE, 0)
+    ])  # Release
     print("[INFO] Circle Press Complete!")
 
 # ─── Main Loop ─────────────────────────────────────────────────
