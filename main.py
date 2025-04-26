@@ -85,6 +85,13 @@ def gesture_detection_loop():
         while True:
             if should_shutdown():
                 break
+if __name__ == "__main__":
+    try:
+        while True:
+            time.sleep(1)
+    except KeyboardInterrupt:
+        print("\n[INFO] PlayAble shutting down...")
+
 
 threading.Thread(target=gesture_detection_loop, daemon=True).start()
 
