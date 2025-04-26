@@ -1,21 +1,43 @@
 from core.gestures import GestureDetector
 from core.mappings import get_button_for_gesture
 from web.server import run_server, set_web_status, should_shutdown
-# No need for send_button_press anymore
 import cv2
 import threading
 import time
-import uinput  # Add uinput for local emulation
+import uinput
+import os
+import sys
+import subprocess
 
 BTN_CIRCLE = 305  # Linux input event code for Circle button
-
-
 TEST_MODE = True  # Set to False later to disable test loop
+
+# ─── Permissions and Module Checks ─────────────────────────────
+
+# Check for sudo/root
+if os.geteuid() != 0:
+    print("❌ ERROR: This script must be run with sudo -E python3 main.py")
+    sys.exit(1)
+
+# Try to load uinput module
+def load_uinput_module():
+    try:
+        subprocess.run(["modprobe", "uinput"], check=True)
+        print("[INFO] uinput module loaded successfully!")
+    except subprocess.CalledProcessError:
+        print("❌ ERROR: Failed to load uinput module!")
+        sys.exit(1)
+
+load_uinput_module()
+
+# ─── Initialize Camera ─────────────────────────────────────────
 
 cap = cv2.VideoCapture(0)
 
 # Start web server in background
 threading.Thread(target=run_server, daemon=True).start()
+
+# ─── Gesture Detection Loop ────────────────────────────────────
 
 def gesture_detection_loop():
     if cap.isOpened():
@@ -46,7 +68,7 @@ def gesture_detection_loop():
                 button = get_button_for_gesture("elbow_raised")
                 if button:
                     set_web_status(f"Pressed: {button.upper()}")
-                    # (Here later we can send Circle based on gesture too)
+                    # (Later: emulate_circle_press() here if needed)
                 gesture_active = True
 
             elif (not elbow_raised) and gesture_active:
@@ -68,7 +90,7 @@ threading.Thread(target=gesture_detection_loop, daemon=True).start()
 
 def emulate_circle_press():
     device = uinput.Device([
-        (uinput.EV_KEY, BTN_CIRCLE)  # Pass as (event_type, event_code)
+        (uinput.EV_KEY, BTN_CIRCLE)
     ])
     time.sleep(1)  # Wait for device ready
     print("[INFO] Emulating CIRCLE press...")
@@ -76,6 +98,8 @@ def emulate_circle_press():
     time.sleep(0.1)  # Hold
     device.emit(BTN_CIRCLE, 0)  # Release
     print("[INFO] Circle Press Complete!")
+
+# ─── Main Loop ─────────────────────────────────────────────────
 
 if __name__ == "__main__" and TEST_MODE:
     while True:
