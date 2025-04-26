@@ -4,6 +4,7 @@ import cv2
 import time
 import os
 import logging
+import subprocess
 from logging.handlers import RotatingFileHandler
 
 from ui import controller_bluetooth
@@ -22,7 +23,7 @@ handler.setFormatter(formatter)
 app = Flask(__name__)
 app.logger.addHandler(handler)
 app.logger.setLevel(logging.INFO)
-app.logger.propagate = False  # ⛔️ prevents duplicate or silent logs
+app.logger.propagate = False
 
 werkzeug_logger = logging.getLogger("werkzeug")
 werkzeug_logger.setLevel(logging.INFO)
@@ -38,6 +39,8 @@ shutdown_flag = False
 # Bluetooth state
 devices = []
 connected_device = None
+
+# ─── Routes ──────────────────────────────────────────────
 
 @app.route("/")
 def dashboard():
@@ -84,11 +87,40 @@ def video_feed():
                    b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
     return Response(generate(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
-@app.route("/shutdown")
+@app.route("/shutdown", methods=["POST"])
 def shutdown():
     global shutdown_flag
     shutdown_flag = True
     return redirect(url_for('dashboard'))
+
+# ─── Chiaki PS5 Connection ─────────────────────────────────
+
+@app.route("/chiaki_connect")
+def chiaki_connect():
+    return render_template("chiaki_connect.html")
+
+@app.route("/start_chiaki", methods=["POST"])
+def start_chiaki():
+    ps5_ip = request.form.get("ps5_ip")
+    psn_id = request.form.get("psn_id")
+    pin = request.form.get("pin")
+
+    if not all([ps5_ip, psn_id, pin]):
+        return "❌ Missing data. Please fill all fields."
+
+    try:
+        cmd = [
+            "chiaki",
+            "--host", ps5_ip,
+            "--psn-account-id", psn_id,
+            "--pin", pin
+        ]
+        subprocess.Popen(cmd)
+        return "✅ Chiaki started! You can go back to the dashboard."
+    except Exception as e:
+        return f"❌ Error starting Chiaki: {str(e)}"
+
+# ─── Server Control ────────────────────────────────────────
 
 def run_server():
     app.run(host='0.0.0.0', port=5000)

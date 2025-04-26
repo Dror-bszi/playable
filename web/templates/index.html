@@ -1,33 +1,27 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>PlayAble - Web Dashboard</title>
-    <style>
-        body { font-family: Arial; text-align: center; margin-top: 40px; }
-        h1 { font-size: 2rem; }
-        img { border: 2px solid black; margin-top: 20px; }
-        button { padding: 10px 20px; font-size: 1rem; margin-top: 30px; cursor: pointer; }
-        a.button-link {
-            display: inline-block;
-            padding: 10px 20px;
-            margin-top: 20px;
-            background-color: #18c418;
-            color: rgb(248, 6, 216);
-            text-decoration: none;
-            border-radius: 4px;
-            margin-right: 10px;
-        }
-    </style>
+    <meta charset="UTF-8">
+    <title>PlayAble Dashboard</title>
 </head>
 <body>
-    <h1>{{ status }}</h1>
-    <img src="/video_feed" width="480" />
-    <br>
-    <form action="/shutdown" method="get">
-        <button type="submit">Shut Down</button>
+    <h1>🎮 PlayAble Dashboard</h1>
+
+    <h2>Controller Actions</h2>
+    <ul>
+        <li><a href="/controller">🔵 Connect Controller</a></li>
+        <li><a href="/controller_status">🟡 View Controller Status</a></li>
+    </ul>
+
+    <h2>Remote Play (Chiaki)</h2>
+    <ul>
+        <li><a href="/chiaki_connect">🟣 Start Chiaki Session</a></li>
+    </ul>
+
+    <h2>System</h2>
+    <form method="POST" action="/shutdown">
+        <button type="submit">🔴 Shutdown PlayAble</button>
     </form>
-    <br>
-    <a href="/controller" class="button-link">Controller Setup</a>
-    <a href="/controller_status_page" class="button-link">🎮 Live Controller View</a>
+
 </body>
 </html>
