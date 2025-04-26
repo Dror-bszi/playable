@@ -71,7 +71,7 @@ def gesture_detection_loop():
                 button = get_button_for_gesture("elbow_raised")
                 if button:
                     set_web_status(f"Pressed: {button.upper()}")
-                    # (Later: emulate_circle_press() here if needed)
+                    # (Later: call emulate_circle_press() here if needed)
                 gesture_active = True
 
             elif (not elbow_raised) and gesture_active:
@@ -98,13 +98,9 @@ time.sleep(1)  # Wait for device ready
 
 def emulate_circle_press():
     print("[INFO] Emulating CIRCLE press...")
-    device.emit([
-        (BTN_CIRCLE, 1)
-    ])  # Press
-    time.sleep(0.1)
-    device.emit([
-        (BTN_CIRCLE, 0)
-    ])  # Release
+    device.emit(BTN_CIRCLE, 1)  # Press
+    time.sleep(0.1)             # Hold
+    device.emit(BTN_CIRCLE, 0)  # Release
     print("[INFO] Circle Press Complete!")
 
 # ─── Main Loop ─────────────────────────────────────────────────
