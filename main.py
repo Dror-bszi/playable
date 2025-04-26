@@ -45,7 +45,7 @@ def gesture_detection_loop():
 
     set_web_status("Calibrate: Hold rest position...")
 
-    # Calibration phase
+    # ─── Calibration Phase ───────────────────────
     calibrated = False
     while not calibrated and not should_shutdown():
         ret, frame = cap.read()
@@ -61,8 +61,9 @@ def gesture_detection_loop():
 
     set_web_status("Calibration complete!")
 
-    # Main detection loop
-    gesture_active = False
+    # ─── Main Detection Loop ─────────────────────
+    gesture_active = {gesture: False for gesture in GESTURE_TO_BUTTON.keys()}
+
     set_web_status("Start gesture detection")
 
     while not should_shutdown():
@@ -72,16 +73,29 @@ def gesture_detection_loop():
             time.sleep(0.5)
             continue
 
-        elbow_raised = detector.is_elbow_raised_forward(frame)
-        if elbow_raised and not gesture_active:
-            button = get_button_for_gesture("elbow_raised")
-            if button:
-                set_web_status(f"Pressed: {button.upper()}")
-                emulate_circle_press()
-            gesture_active = True
-        elif not elbow_raised and gesture_active:
-            gesture_active = False
-            set_web_status("Waiting for gesture...")
+        for gesture_name, assigned_button in GESTURE_TO_BUTTON.items():
+            if assigned_button is None:
+                continue  # Skip gestures not mapped to buttons
+
+            # Check the gesture dynamically:
+            is_detected = False
+            if gesture_name == "left_elbow_raised_forward":
+                is_detected = detector.is_left_elbow_raised_forward(frame)
+            elif gesture_name == "mouth_open":
+                is_detected = detector.is_mouth_open(frame)
+            elif gesture_name == "head_tilt_right":
+                is_detected = detector.is_head_tilt_right(frame)
+            elif gesture_name == "right_elbow_raised_forward":
+                is_detected = detector.is_right_elbow_raised_forward(frame)
+
+            if is_detected and not gesture_active[gesture_name]:
+                set_web_status(f"Pressed: {assigned_button.upper()}")
+                emulate_circle_press()  # Later replace to send the correct button
+                gesture_active[gesture_name] = True
+
+            elif not is_detected and gesture_active[gesture_name]:
+                gesture_active[gesture_name] = False
+                set_web_status("Waiting for gesture...")
 
     cap.release()
     cv2.destroyAllWindows()

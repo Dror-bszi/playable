@@ -42,6 +42,24 @@ connected_device = None
 
 # ─── Routes ──────────────────────────────────────────────
 
+gesture_mappings = {}  # global mapping dictionary
+
+@app.route("/save_mapping", methods=["POST"])
+def save_mapping():
+    global gesture_mappings
+    data = request.get_json()
+    button = data.get("button")
+    gesture = data.get("gesture")
+    if button and gesture:
+        gesture_mappings[button] = gesture
+        print(f"[MAPPING] {button} ➔ {gesture}")
+        return "OK", 200
+    return "Bad Request", 400
+
+@app.route("/controller_mapping")
+def controller_mapping():
+    return render_template("controller_mapping.html")
+
 @app.route("/")
 def dashboard():
     return render_template("index.html", status=status)

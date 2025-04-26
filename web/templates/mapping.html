@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>PlayAble - Map Gestures to Controller</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin-top: 30px;
+            background-color: #f0f0f0;
+        }
+        h1 {
+            margin-bottom: 20px;
+        }
+        .controller-container {
+            position: relative;
+            display: inline-block;
+        }
+        .controller-img {
+            width: 600px;
+            height: auto;
+            border: 2px solid black;
+        }
+        .button-overlay {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            background-color: rgba(255, 0, 0, 0.2);
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        .dropdown {
+            position: absolute;
+            display: none;
+            background: white;
+            border: 1px solid #aaa;
+            border-radius: 6px;
+            padding: 5px;
+        }
+        .dropdown select {
+            padding: 5px;
+            font-size: 1rem;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>🎮 Map Gestures to Buttons</h1>
+
+    <div class="controller-container">
+        <img src="/static/controller.png" alt="PS5 Controller" class="controller-img">
+
+        <!-- Button Overlays -->
+        <div class="button-overlay" id="cross" style="top: 370px; left: 380px;"></div>
+        <div class="button-overlay" id="circle" style="top: 320px; left: 440px;"></div>
+        <div class="button-overlay" id="square" style="top: 320px; left: 320px;"></div>
+        <div class="button-overlay" id="triangle" style="top: 270px; left: 380px;"></div>
+
+        <!-- Dropdown Menu -->
+        <div class="dropdown" id="dropdown">
+            <form id="gestureForm">
+                <select id="gestureSelect">
+                    <option value="">-- Assign Gesture --</option>
+                    <option value="elbow_raised">Left Elbow Forward</option>
+                    <option value="mouth_open">Mouth Open</option>
+                    <option value="head_tilt_right">Head Tilt Right</option>
+                </select>
+                <br><br>
+                <button type="submit">✅ Save</button>
+            </form>
+        </div>
+    </div>
+
+    <br><br>
+    <a href="/" style="text-decoration: none; background: #4CAF50; padding: 10px 20px; color: white; border-radius: 6px;">⬅️ Back to Dashboard</a>
+
+    <script>
+        const buttons = document.querySelectorAll('.button-overlay');
+        const dropdown = document.getElementById('dropdown');
+        let currentButton = null;
+
+        buttons.forEach(button => {
+            button.addEventListener('click', (e) => {
+                currentButton = button.id;
+                dropdown.style.display = 'block';
+                dropdown.style.top = (button.offsetTop + 60) + 'px';
+                dropdown.style.left = (button.offsetLeft - 20) + 'px';
+            });
+        });
+
+        document.getElementById('gestureForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const selectedGesture = document.getElementById('gestureSelect').value;
+            if (currentButton && selectedGesture) {
+                fetch('/save_mapping', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        button: currentButton,
+                        gesture: selectedGesture
+                    })
+                }).then(res => {
+                    alert("✅ Mapping saved!");
+                    dropdown.style.display = 'none';
+                });
+            }
+        });
+
+        document.addEventListener('click', function(event) {
+            if (!event.target.closest('.button-overlay') && !event.target.closest('#dropdown')) {
+                dropdown.style.display = 'none';
+            }
+        });
+    </script>
+
+</body>
+</html>
