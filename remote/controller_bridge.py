@@ -4,10 +4,10 @@ import time
 import subprocess
 from evdev import UInput, ecodes as e
 
-# Global Variables
+# ─── Global Variables ───────────────────────────────────────
 MERGED_DEVICE_PATH = None
 
-# --- Button Codes ---
+# ─── Button Codes ────────────────────────────────────────────
 BTN_CROSS = 304
 BTN_CIRCLE = 305
 BTN_TRIANGLE = 307
@@ -25,7 +25,7 @@ BTN_DPAD_DOWN = 545
 BTN_DPAD_LEFT = 546
 BTN_DPAD_RIGHT = 547
 
-
+# ─── DualSense Device Search ─────────────────────────────────
 def find_dualsense_event():
     """
     Automatically find the correct DualSense event.
@@ -61,6 +61,7 @@ def find_virtual_device():
         print(f"❌ ERROR finding virtual device: {e}")
     return None
 
+# ─── Evsieve Merge ───────────────────────────────────────────
 def start_evsieve_merge():
     """
     Merge real DualSense + Virtual Device.
@@ -82,7 +83,6 @@ def start_evsieve_merge():
 
     output_link = "/dev/input/by-id/merged-playable"
 
-    # Start evsieve
     try:
         cmd = [
             "evsieve",
@@ -93,13 +93,10 @@ def start_evsieve_merge():
         subprocess.Popen(cmd)
         print(f"[INFO] Started evsieve merging {real_device} + {virtual_device} into {output_link}")
 
-        # Wait for link to be created
         for _ in range(10):
             if os.path.exists(output_link):
                 MERGED_DEVICE_PATH = output_link
                 print(f"[INFO] Merged controller available at {MERGED_DEVICE_PATH}")
-
-                # ⚡ After successful merge: Grab real DualSense manually too
                 grab_real_device(real_device)
                 return True
 
@@ -120,10 +117,11 @@ def grab_real_device(real_device_path):
     except subprocess.CalledProcessError as e:
         print(f"❌ ERROR: Failed to grab {real_device_path}: {e}")
 
-
-
-# ─── Load UInput Kernel Module ───────────────────────────────
+# ─── Virtual Controller Setup ────────────────────────────────
 def load_uinput_module():
+    """
+    Load the uinput kernel module.
+    """
     try:
         subprocess.run(["modprobe", "uinput"], check=True)
         print("[INFO] uinput kernel module loaded successfully!")
@@ -131,26 +129,28 @@ def load_uinput_module():
         print("❌ ERROR: Failed to load uinput module!")
         sys.exit(1)
 
-# ─── Create Virtual Controller ───────────────────────────────
 def create_virtual_controller():
+    """
+    Create the virtual game controller with predefined buttons.
+    """
     capabilities = {
         e.EV_KEY: [
-            e.BTN_CIRCLE,
-            e.BTN_CROSS,
-            e.BTN_SQUARE,
-            e.BTN_TRIANGLE,
-            e.BTN_TL,    # L1
-            e.BTN_TR,    # R1
-            e.BTN_TL2,   # L2
-            e.BTN_TR2,   # R2
-            e.BTN_THUMBL, # L3
-            e.BTN_THUMBR, # R3
-            e.BTN_SELECT, # Share
-            e.BTN_START,  # Options
-            e.BTN_DPAD_UP,
-            e.BTN_DPAD_DOWN,
-            e.BTN_DPAD_LEFT,
-            e.BTN_DPAD_RIGHT,
+            BTN_CIRCLE,
+            BTN_CROSS,
+            BTN_SQUARE,
+            BTN_TRIANGLE,
+            BTN_L1,
+            BTN_R1,
+            BTN_L2,
+            BTN_R2,
+            BTN_L3,
+            BTN_R3,
+            BTN_SHARE,
+            BTN_OPTIONS,
+            BTN_DPAD_UP,
+            BTN_DPAD_DOWN,
+            BTN_DPAD_LEFT,
+            BTN_DPAD_RIGHT,
         ]
     }
     ui = UInput(capabilities)
@@ -158,7 +158,6 @@ def create_virtual_controller():
     time.sleep(1)
     return ui
 
-
-# Initialize once when importing
+# ─── Initialize Global UI Controller ─────────────────────────
 load_uinput_module()
 ui = create_virtual_controller()
