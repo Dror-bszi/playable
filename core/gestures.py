@@ -2,6 +2,14 @@
 import mediapipe as mp
 import cv2
 
+# --- Default Gestures ---
+default_gestures = [
+    "left_elbow_raised_forward",
+    "mouth_open",
+    "head_tilt_right",
+    "right_elbow_raised_forward",
+]
+
 class GestureDetector:
     def __init__(self):
         self.pose = mp.solutions.pose.Pose()

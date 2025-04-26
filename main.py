@@ -1,4 +1,4 @@
-from core.gestures import GestureDetector
+from core.gestures import GestureDetector, default_gestures
 from remote.output_bridge import press_button
 
 from web.server import run_server, set_web_status, should_shutdown, gesture_mappings

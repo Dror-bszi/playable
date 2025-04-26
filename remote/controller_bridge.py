@@ -3,7 +3,6 @@ import sys
 from evdev import UInput, ecodes as e
 import time
 
-BTN_CIRCLE = 305
 # Global variable to store merged device path
 MERGED_DEVICE_PATH = None
 
@@ -130,23 +129,30 @@ def load_uinput_module():
 # ─── Create Virtual Controller ───────────────────────────────
 def create_virtual_controller():
     capabilities = {
-        e.EV_KEY: [BTN_CIRCLE],
+        e.EV_KEY: [
+            e.BTN_CIRCLE,
+            e.BTN_CROSS,
+            e.BTN_SQUARE,
+            e.BTN_TRIANGLE,
+            e.BTN_TL,    # L1
+            e.BTN_TR,    # R1
+            e.BTN_TL2,   # L2
+            e.BTN_TR2,   # R2
+            e.BTN_THUMBL, # L3
+            e.BTN_THUMBR, # R3
+            e.BTN_SELECT, # Share
+            e.BTN_START,  # Options
+            e.BTN_DPAD_UP,
+            e.BTN_DPAD_DOWN,
+            e.BTN_DPAD_LEFT,
+            e.BTN_DPAD_RIGHT,
+        ]
     }
     ui = UInput(capabilities)
     print("[INFO] Virtual controller created.")
     time.sleep(1)
     return ui
 
-# ─── Emulate Circle Button ───────────────────────────────────
-def emulate_circle_press():
-    global ui
-    print("[INFO] Emulating CIRCLE press...")
-    ui.write(e.EV_KEY, BTN_CIRCLE, 1)
-    ui.syn()
-    time.sleep(0.1)
-    ui.write(e.EV_KEY, BTN_CIRCLE, 0)
-    ui.syn()
-    print("[INFO] Circle Press Complete!")
 
 # Initialize once when importing
 load_uinput_module()
