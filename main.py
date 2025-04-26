@@ -7,7 +7,8 @@ import time
 import os
 import sys
 
-from core.controller_bridge import emulate_circle_press  # load_uinput already handled there
+from remote.controller_bridge import emulate_circle_press
+  # load_uinput already handled there
 
 # ─── Permissions Check ───────────────────────────────────────
 if os.geteuid() != 0:
