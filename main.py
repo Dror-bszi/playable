@@ -11,8 +11,8 @@ from evdev import UInput, ecodes as e
 
 # ─── Constants ───────────────────────────────────────────────
 
-BTN_CIRCLE = e.BTN_CIRCLE  # evdev constant
-TEST_MODE = True           # Set to False later to disable test loop
+BTN_CIRCLE = 305  # Manual definition because some evdev versions don't have BTN_CIRCLE
+TEST_MODE = True  # Set to False later to disable test loop
 
 # ─── Permissions and Module Checks ─────────────────────────────
 
