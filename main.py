@@ -10,6 +10,7 @@ import sys
 import subprocess
 
 BTN_CIRCLE = 305  # Linux input event code for Circle button
+EV_KEY = 1        # Linux event type for Key events
 TEST_MODE = True  # Set to False later to disable test loop
 
 # ─── Permissions and Module Checks ─────────────────────────────
@@ -88,11 +89,12 @@ threading.Thread(target=gesture_detection_loop, daemon=True).start()
 
 # ─── Local Circle Emulation ────────────────────────────────────
 
+device = uinput.Device([
+    (EV_KEY, BTN_CIRCLE)
+])
+time.sleep(1)  # Wait for device ready
+
 def emulate_circle_press():
-    device = uinput.Device([
-        (uinput.EV_KEY, BTN_CIRCLE)
-    ])
-    time.sleep(1)  # Wait for device ready
     print("[INFO] Emulating CIRCLE press...")
     device.emit(BTN_CIRCLE, 1)  # Press
     time.sleep(0.1)  # Hold
