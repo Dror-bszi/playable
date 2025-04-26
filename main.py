@@ -11,7 +11,6 @@ from evdev import UInput, ecodes as e
 
 # ─── Constants ───────────────────────────────────────────────
 BTN_CIRCLE = 305
-TEST_MODE = True
 
 # ─── Permissions and Module Checks ────────────────────────────
 if os.geteuid() != 0:
@@ -35,8 +34,6 @@ capabilities = {
 ui = UInput(capabilities)
 print("[INFO] Virtual controller created.")
 time.sleep(1)
-
-# ❌ DO NOT start evsieve here. User will trigger it later!
 
 # ─── Initialize Camera ───────────────────────────────────────
 cap = cv2.VideoCapture(0)
@@ -100,9 +97,3 @@ def emulate_circle_press():
     ui.write(e.EV_KEY, BTN_CIRCLE, 0)
     ui.syn()
     print("[INFO] Circle Press Complete!")
-
-# ─── Main Loop for Testing ────────────────────────────────────
-if __name__ == "__main__" and TEST_MODE:
-    while True:
-        emulate_circle_press()
-        time.sleep(5)
