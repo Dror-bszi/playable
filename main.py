@@ -36,7 +36,7 @@ print("[INFO] Virtual controller created.")
 time.sleep(1)
 
 # ─── Initialize Camera ───────────────────────────────────────
-cap = find_working_camera()
+
 
 def find_working_camera():
     for i in range(3):  # check /dev/video0, /dev/video1, /dev/video2
@@ -48,6 +48,7 @@ def find_working_camera():
     print("❌ ERROR: No working camera found.")
     return None
 
+cap = find_working_camera()
 # ─── Start Web Server ─────────────────────────────────────────
 threading.Thread(target=run_server, daemon=True).start()
 
