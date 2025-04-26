@@ -12,7 +12,7 @@ sudo apt install -y \
     libatlas-base-dev \
     libjpeg-dev \
     libgl1 \
-    bluetooth \Y
+    bluetooth \
     bluez \
     bluez-tools \
     libhidapi-hidraw0 \
@@ -22,6 +22,7 @@ sudo apt install -y \
 # ─── Python Packages ─────────────────────────────
 pip3 install --break-system-packages --upgrade pip
 pip3 install --break-system-packages -r requirements.txt
+pip3 install --break-system-packages mediapipe  # <-- Force separate install of mediapipe
 
 # ─── Bluetooth Auto-Pair Setup ───────────────────
 chmod +x "$(dirname "$0")/utils/pair_controller.expect"
