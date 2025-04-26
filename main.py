@@ -68,7 +68,7 @@ threading.Thread(target=gesture_detection_loop, daemon=True).start()
 
 def emulate_circle_press():
     device = uinput.Device([
-        BTN_CIRCLE  # Use your manually defined BTN_CIRCLE
+        (uinput.EV_KEY, BTN_CIRCLE)  # Pass as (event_type, event_code)
     ])
     time.sleep(1)  # Wait for device ready
     print("[INFO] Emulating CIRCLE press...")
