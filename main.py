@@ -1,6 +1,6 @@
 from core.gestures import GestureDetector
 from core.mappings import get_button_for_gesture
-from web.server import run_server, set_web_status, should_shutdown
+from web.server import run_server, set_web_status, should_shutdown, start_evsieve_merge
 import cv2
 import threading
 import time
@@ -10,11 +10,8 @@ import subprocess
 from evdev import UInput, ecodes as e
 
 # ─── Constants ───────────────────────────────────────────────
-BTN_CIRCLE = 305  # Manual definition because some evdev versions don't have BTN_CIRCLE
-TEST_MODE = True  # Set to False to disable test loop
-REAL_DUALSENSE_PATH = "/dev/input/event8"
-VIRTUAL_DEVICE_PATH = "/dev/input/event4"
-MERGED_DEVICE_LINK = "/dev/input/by-id/merged-playable"
+BTN_CIRCLE = 305
+TEST_MODE = True
 
 # ─── Permissions and Module Checks ────────────────────────────
 if os.geteuid() != 0:
@@ -37,29 +34,9 @@ capabilities = {
 }
 ui = UInput(capabilities)
 print("[INFO] Virtual controller created.")
-time.sleep(1)  # Give some time for event4 to appear
+time.sleep(1)
 
-# ─── Start evsieve to merge real + virtual ────────────────────
-def start_evsieve_merge():
-    if not os.path.exists(REAL_DUALSENSE_PATH):
-        print(f"❌ ERROR: {REAL_DUALSENSE_PATH} not found. Connect your real controller!")
-        sys.exit(1)
-    if not os.path.exists(VIRTUAL_DEVICE_PATH):
-        print(f"❌ ERROR: {VIRTUAL_DEVICE_PATH} not found. Virtual controller not created!")
-        sys.exit(1)
-
-    cmd = [
-        "evsieve",
-        "--input", REAL_DUALSENSE_PATH, "grab",
-        "--input", VIRTUAL_DEVICE_PATH, "grab",
-        "--output", "create-link=" + MERGED_DEVICE_LINK
-    ]
-
-    print("[INFO] Starting evsieve to merge controllers...")
-    subprocess.Popen(cmd)
-    print(f"[INFO] Merged device will appear at {MERGED_DEVICE_LINK}")
-
-start_evsieve_merge()
+# ❌ DO NOT start evsieve here. User will trigger it later!
 
 # ─── Initialize Camera ───────────────────────────────────────
 cap = cv2.VideoCapture(0)
@@ -117,10 +94,10 @@ threading.Thread(target=gesture_detection_loop, daemon=True).start()
 # ─── Emulate Circle Button ────────────────────────────────────
 def emulate_circle_press():
     print("[INFO] Emulating CIRCLE press...")
-    ui.write(e.EV_KEY, BTN_CIRCLE, 1)  # Press
+    ui.write(e.EV_KEY, BTN_CIRCLE, 1)
     ui.syn()
     time.sleep(0.1)
-    ui.write(e.EV_KEY, BTN_CIRCLE, 0)  # Release
+    ui.write(e.EV_KEY, BTN_CIRCLE, 0)
     ui.syn()
     print("[INFO] Circle Press Complete!")
 
