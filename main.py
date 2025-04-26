@@ -36,8 +36,6 @@ print("[INFO] Virtual controller created.")
 time.sleep(1)
 
 # ─── Initialize Camera ───────────────────────────────────────
-
-
 def find_working_camera():
     for i in range(3):  # check /dev/video0, /dev/video1, /dev/video2
         cap = cv2.VideoCapture(i)
@@ -54,65 +52,66 @@ threading.Thread(target=run_server, daemon=True).start()
 
 # ─── Gesture Detection Loop ───────────────────────────────────
 def gesture_detection_loop():
-    if cap is not None:
-        print("[INFO] Starting gesture detection...")
-        detector = GestureDetector()
+    global cap
+    if cap is None:
+        set_web_status("❌ No camera available. Running in UI-only mode.")
+        while not should_shutdown():
+            time.sleep(1)
+        return
 
-        set_web_status("Calibrate: Hold rest position...")
-        while True:
-            ret, frame = cap.read()
-            if not ret:
-                continue
-            if detector.calibrate(frame):
-                set_web_status("Calibration complete!")
-                break
+    print("[INFO] Starting gesture detection...")
+    detector = GestureDetector()
 
-        gesture_active = False
-        set_web_status("Start gesture detection")
+    set_web_status("Calibrate: Hold rest position...")
 
-        while True:
-            if should_shutdown():
-                break
+    # Calibration phase
+    calibrated = False
+    while not calibrated and not should_shutdown():
+        ret, frame = cap.read()
+        if not ret or frame is None:
+            print("[WARN] Failed to read frame during calibration.")
+            time.sleep(0.5)
+            continue
+        calibrated = detector.calibrate(frame)
 
-            ret, frame = cap.read()
-            if not ret:
-                continue
+    if not calibrated:
+        print("❌ Calibration failed.")
+        return
 
-            elbow_raised = detector.is_elbow_raised_forward(frame)
-            if elbow_raised and not gesture_active:
-                button = get_button_for_gesture("elbow_raised")
-                if button:
-                    set_web_status(f"Pressed: {button.upper()}")
-                    emulate_circle_press()
-                gesture_active = True
+    set_web_status("Calibration complete!")
 
-            elif (not elbow_raised) and gesture_active:
-                gesture_active = False
-                set_web_status("Waiting for gesture...")
+    # Main detection loop
+    gesture_active = False
+    set_web_status("Start gesture detection")
 
-        cap.release()
-        cv2.destroyAllWindows()
-    else:
-        set_web_status("❌ Camera not found. Running in UI-only mode.")
-        while True:
-            if should_shutdown():
-                break
+    while not should_shutdown():
+        ret, frame = cap.read()
+        if not ret or frame is None:
+            print("[WARN] Failed to read frame.")
+            time.sleep(0.5)
+            continue
+
+        elbow_raised = detector.is_elbow_raised_forward(frame)
+        if elbow_raised and not gesture_active:
+            button = get_button_for_gesture("elbow_raised")
+            if button:
+                set_web_status(f"Pressed: {button.upper()}")
+                emulate_circle_press()
+            gesture_active = True
+        elif not elbow_raised and gesture_active:
+            gesture_active = False
+            set_web_status("Waiting for gesture...")
+
+    cap.release()
+    cv2.destroyAllWindows()
+
+# ─── Start Gesture Detection Loop ─────────────────────────────
+threading.Thread(target=gesture_detection_loop, daemon=True).start()
+
+# ─── Main Blocking Loop ───────────────────────────────────────
 if __name__ == "__main__":
     try:
         while True:
             time.sleep(1)
     except KeyboardInterrupt:
         print("\n[INFO] PlayAble shutting down...")
-
-
-threading.Thread(target=gesture_detection_loop, daemon=True).start()
-
-# ─── Emulate Circle Button ────────────────────────────────────
-def emulate_circle_press():
-    print("[INFO] Emulating CIRCLE press...")
-    ui.write(e.EV_KEY, BTN_CIRCLE, 1)
-    ui.syn()
-    time.sleep(0.1)
-    ui.write(e.EV_KEY, BTN_CIRCLE, 0)
-    ui.syn()
-    print("[INFO] Circle Press Complete!")
