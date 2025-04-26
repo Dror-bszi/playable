@@ -17,7 +17,8 @@ sudo apt install -y \
     bluez-tools \
     libhidapi-hidraw0 \
     libhidapi-libusb0 \
-    expect
+    expect \
+    python3-uinput
 
 # ─── Python Packages ─────────────────────────────
 pip3 install --break-system-packages --upgrade pip

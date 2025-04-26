@@ -1,10 +1,11 @@
 from core.gestures import GestureDetector
 from core.mappings import get_button_for_gesture
 from web.server import run_server, set_web_status, should_shutdown
-from remote.input_bridge import send_button_press
+# No need for send_button_press anymore
 import cv2
 import threading
 import time
+import uinput  # Add uinput
 
 TEST_MODE = True  # Set to False later to disable test loop
 
@@ -42,7 +43,7 @@ def gesture_detection_loop():
                 button = get_button_for_gesture("elbow_raised")
                 if button:
                     set_web_status(f"Pressed: {button.upper()}")
-                    send_button_press(button)  # Send button when gesture detected
+                    # (Here later we can send Circle based on gesture too)
                 gesture_active = True
 
             elif (not elbow_raised) and gesture_active:
@@ -60,9 +61,20 @@ def gesture_detection_loop():
 # Start gesture detection loop in background
 threading.Thread(target=gesture_detection_loop, daemon=True).start()
 
-# Test Mode: Press CIRCLE every 5 seconds
+# ─── Local Circle Emulation ────────────────────────────────────
+
+def emulate_circle_press():
+    device = uinput.Device([
+        uinput.BTN_CIRCLE
+    ])
+    time.sleep(1)  # Wait for device ready
+    print("[INFO] Emulating CIRCLE press...")
+    device.emit(uinput.BTN_CIRCLE, 1)  # Press
+    time.sleep(0.1)  # Hold
+    device.emit(uinput.BTN_CIRCLE, 0)  # Release
+    print("[INFO] Circle Press Complete!")
+
 if __name__ == "__main__" and TEST_MODE:
     while True:
-        print("[INFO] Pressing CIRCLE button...")
-        send_button_press("circle")
+        emulate_circle_press()
         time.sleep(5)
