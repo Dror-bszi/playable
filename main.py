@@ -10,18 +10,17 @@ import subprocess
 from evdev import UInput, ecodes as e
 
 # ─── Constants ───────────────────────────────────────────────
-
 BTN_CIRCLE = 305  # Manual definition because some evdev versions don't have BTN_CIRCLE
-TEST_MODE = True  # Set to False later to disable test loop
+TEST_MODE = True  # Set to False to disable test loop
+REAL_DUALSENSE_PATH = "/dev/input/event8"
+VIRTUAL_DEVICE_PATH = "/dev/input/event4"
+MERGED_DEVICE_LINK = "/dev/input/by-id/merged-playable"
 
-# ─── Permissions and Module Checks ─────────────────────────────
-
-# Check for sudo/root
+# ─── Permissions and Module Checks ────────────────────────────
 if os.geteuid() != 0:
     print("❌ ERROR: This script must be run with sudo -E python3 main.py")
     sys.exit(1)
 
-# Try to load uinput kernel module
 def load_uinput_module():
     try:
         subprocess.run(["modprobe", "uinput"], check=True)
@@ -32,24 +31,43 @@ def load_uinput_module():
 
 load_uinput_module()
 
-# ─── Initialize Virtual Input Device ──────────────────────────
-
+# ─── Create Virtual Controller ───────────────────────────────
 capabilities = {
     e.EV_KEY: [BTN_CIRCLE],
 }
-
 ui = UInput(capabilities)
-time.sleep(1)  # Give time for virtual device to register
+print("[INFO] Virtual controller created.")
+time.sleep(1)  # Give some time for event4 to appear
 
-# ─── Initialize Camera ─────────────────────────────────────────
+# ─── Start evsieve to merge real + virtual ────────────────────
+def start_evsieve_merge():
+    if not os.path.exists(REAL_DUALSENSE_PATH):
+        print(f"❌ ERROR: {REAL_DUALSENSE_PATH} not found. Connect your real controller!")
+        sys.exit(1)
+    if not os.path.exists(VIRTUAL_DEVICE_PATH):
+        print(f"❌ ERROR: {VIRTUAL_DEVICE_PATH} not found. Virtual controller not created!")
+        sys.exit(1)
 
+    cmd = [
+        "evsieve",
+        "--input", REAL_DUALSENSE_PATH, "grab",
+        "--input", VIRTUAL_DEVICE_PATH, "grab",
+        "--output", "create-link=" + MERGED_DEVICE_LINK
+    ]
+
+    print("[INFO] Starting evsieve to merge controllers...")
+    subprocess.Popen(cmd)
+    print(f"[INFO] Merged device will appear at {MERGED_DEVICE_LINK}")
+
+start_evsieve_merge()
+
+# ─── Initialize Camera ───────────────────────────────────────
 cap = cv2.VideoCapture(0)
 
-# Start web server in background
+# ─── Start Web Server ─────────────────────────────────────────
 threading.Thread(target=run_server, daemon=True).start()
 
-# ─── Gesture Detection Loop ────────────────────────────────────
-
+# ─── Gesture Detection Loop ───────────────────────────────────
 def gesture_detection_loop():
     if cap.isOpened():
         detector = GestureDetector()
@@ -79,7 +97,7 @@ def gesture_detection_loop():
                 button = get_button_for_gesture("elbow_raised")
                 if button:
                     set_web_status(f"Pressed: {button.upper()}")
-                    # (Later: call emulate_circle_press() here)
+                    emulate_circle_press()
                 gesture_active = True
 
             elif (not elbow_raised) and gesture_active:
@@ -94,11 +112,9 @@ def gesture_detection_loop():
             if should_shutdown():
                 break
 
-# Start gesture detection loop in background
 threading.Thread(target=gesture_detection_loop, daemon=True).start()
 
-# ─── Local Circle Emulation ────────────────────────────────────
-
+# ─── Emulate Circle Button ────────────────────────────────────
 def emulate_circle_press():
     print("[INFO] Emulating CIRCLE press...")
     ui.write(e.EV_KEY, BTN_CIRCLE, 1)  # Press
@@ -108,8 +124,7 @@ def emulate_circle_press():
     ui.syn()
     print("[INFO] Circle Press Complete!")
 
-# ─── Main Loop ─────────────────────────────────────────────────
-
+# ─── Main Loop for Testing ────────────────────────────────────
 if __name__ == "__main__" and TEST_MODE:
     while True:
         emulate_circle_press()
