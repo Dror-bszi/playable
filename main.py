@@ -6,7 +6,14 @@ import threading
 
 from core.gestures import GestureDetector, default_gestures
 from remote.output_bridge import press_button
-from web.server import run_server, set_web_status, should_shutdown, gesture_mappings, set_camera_index
+from web.server import (
+    run_server,
+    set_web_status,
+    should_shutdown,
+    gesture_mappings,
+    set_camera_index,
+    update_frame  # ✅ import update_frame to share camera frame
+)
 
 # --- Permissions Check ---
 if os.geteuid() != 0:
@@ -69,6 +76,9 @@ def gesture_detection_loop():
             print("[WARN] Failed to read frame.")
             time.sleep(0.5)
             continue
+
+        # ✅ Update the frame for live web streaming
+        update_frame(frame.copy())
 
         for button_name, gesture_name in gesture_mappings.items():
             if gesture_name is None:

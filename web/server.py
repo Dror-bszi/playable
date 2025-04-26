@@ -1,6 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for, Response, jsonify
 import threading
-import cv2
 import time
 import os
 import logging
@@ -15,6 +14,7 @@ app = Flask(__name__)
 
 # ─── Global Variables ───────────────────────────────────────
 camera_index = 0  # Default fallback
+last_frame = None  # ✅ Store the latest frame here!
 status = "Waiting..."
 shutdown_flag = False
 devices = []
@@ -32,6 +32,10 @@ def set_web_status(message):
 
 def should_shutdown():
     return shutdown_flag
+
+def update_frame(frame):
+    global last_frame
+    last_frame = frame
 
 # ─── Logging Configuration ──────────────────────────────────
 log_dir = "logs"
@@ -64,16 +68,14 @@ def dashboard():
 @app.route("/video_feed")
 def video_feed():
     def generate():
-        cap = cv2.VideoCapture(camera_index)
         while True:
-            success, frame = cap.read()
-            if not success:
-                break
-            ret, buffer = cv2.imencode('.jpg', frame)
-            frame = buffer.tobytes()
-            yield (b'--frame\r\n'
-                   b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
-        cap.release()
+            if last_frame is not None:
+                import cv2  # Needed inside thread
+                ret, buffer = cv2.imencode('.jpg', last_frame)
+                frame = buffer.tobytes()
+                yield (b'--frame\r\n'
+                       b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+            time.sleep(0.05)  # 20 FPS
     return Response(generate(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 @app.route("/controller")
