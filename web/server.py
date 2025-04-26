@@ -9,7 +9,6 @@ from logging.handlers import RotatingFileHandler
 from remote.device_merger import start_device_merging
 from ui import controller_bluetooth
 from ui.controller_live_status import start_controller_monitor, get_status
-from main import camera_index
 
 camera_index = 0  # Default fallback
 

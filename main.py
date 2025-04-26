@@ -1,7 +1,21 @@
 from core.gestures import GestureDetector, default_gestures
 from remote.output_bridge import press_button
 
-from web.server import run_server, set_web_status, should_shutdown, gesture_mappings
+from web.server import run_server, set_web_status, should_shutdown, gesture_mappings, set_camera_index
+
+# --- Initialize Camera ---
+def find_working_camera():
+    for i in range(3):
+        cap = cv2.VideoCapture(i)
+        if cap.isOpened():
+            print(f"[INFO] Found working camera at index {i} (/dev/video{i})")
+            return cap, i
+        cap.release()
+    print("❌ ERROR: No working camera found.")
+    return None, None
+
+cap, camera_index = find_working_camera()
+set_camera_index(camera_index)  # ✅ Tell the web server which camera to use
 import cv2
 import threading
 import time
