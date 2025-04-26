@@ -9,6 +9,7 @@ from logging.handlers import RotatingFileHandler
 from remote.device_merger import start_device_merging
 from ui import controller_bluetooth
 from ui.controller_live_status import start_controller_monitor, get_status
+from main import camera_index
 
 # ─── Logging Configuration ───────────────────────────────
 log_dir = "logs"
@@ -94,7 +95,7 @@ def connect():
 @app.route("/video_feed")
 def video_feed():
     def generate():
-        cap = cv2.VideoCapture(0)
+        cap = cv2.VideoCapture(camera_index)  # ✅ use real camera index
         while True:
             success, frame = cap.read()
             if not success:
@@ -103,6 +104,7 @@ def video_feed():
             frame = buffer.tobytes()
             yield (b'--frame\r\n'
                    b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+        cap.release()
     return Response(generate(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 @app.route("/shutdown", methods=["POST"])

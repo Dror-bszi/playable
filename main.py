@@ -19,12 +19,13 @@ def find_working_camera():
         cap = cv2.VideoCapture(i)
         if cap.isOpened():
             print(f"[INFO] Found working camera at index {i} (/dev/video{i})")
-            return cap
+            return cap, i
         cap.release()
     print("❌ ERROR: No working camera found.")
-    return None
+    return None, None
 
-cap = find_working_camera()
+cap, camera_index = find_working_camera()
+
 
 # --- Start Web Server ---
 threading.Thread(target=run_server, daemon=True).start()
