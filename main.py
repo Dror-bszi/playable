@@ -1,5 +1,5 @@
 from core.gestures import GestureDetector
-from remote.controller_bridge import press_button
+from remote.output_bridge import press_button
 
 from web.server import run_server, set_web_status, should_shutdown, gesture_mappings
 import cv2
