@@ -7,6 +7,7 @@ import time
 import os
 import sys
 
+from web.server import gesture_mappings  # Add this import!
 from remote.controller_bridge import emulate_circle_press
   # load_uinput already handled there
 

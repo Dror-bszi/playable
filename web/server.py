@@ -58,7 +58,7 @@ def save_mapping():
 
 @app.route("/controller_mapping")
 def controller_mapping():
-    return render_template("controller_mapping.html")
+    return render_template("mapping.html")
 
 @app.route("/")
 def dashboard():
