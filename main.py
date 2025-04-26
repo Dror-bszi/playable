@@ -1,5 +1,4 @@
 from core.gestures import GestureDetector
-from core.mappings import gesture_mappings as default_mappings
 from remote.controller_bridge import press_button
 
 from web.server import run_server, set_web_status, should_shutdown, gesture_mappings
@@ -62,7 +61,7 @@ def gesture_detection_loop():
     set_web_status("Start gesture detection")
 
     # Track which gestures are active
-    gesture_active = {gesture: False for gesture in default_mappings.keys()}
+    gesture_active = {gesture: False for gesture in default_gestures}
 
     while not should_shutdown():
         ret, frame = cap.read()
