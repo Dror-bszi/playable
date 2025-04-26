@@ -5,7 +5,10 @@ from web.server import run_server, set_web_status, should_shutdown
 import cv2
 import threading
 import time
-import uinput  # Add uinput
+import uinput  # Add uinput for local emulation
+
+BTN_CIRCLE = 305  # Linux input event code for Circle button
+
 
 TEST_MODE = True  # Set to False later to disable test loop
 
@@ -65,13 +68,13 @@ threading.Thread(target=gesture_detection_loop, daemon=True).start()
 
 def emulate_circle_press():
     device = uinput.Device([
-        uinput.BTN_CIRCLE
+        BTN_CIRCLE  # Use your manually defined BTN_CIRCLE
     ])
     time.sleep(1)  # Wait for device ready
     print("[INFO] Emulating CIRCLE press...")
-    device.emit(uinput.BTN_CIRCLE, 1)  # Press
+    device.emit(BTN_CIRCLE, 1)  # Press
     time.sleep(0.1)  # Hold
-    device.emit(uinput.BTN_CIRCLE, 0)  # Release
+    device.emit(BTN_CIRCLE, 0)  # Release
     print("[INFO] Circle Press Complete!")
 
 if __name__ == "__main__" and TEST_MODE:
