@@ -6,7 +6,7 @@ import os
 import logging
 import subprocess
 from logging.handlers import RotatingFileHandler
-
+from core.merge_bridge import merge_and_block_controller
 from ui import controller_bluetooth
 from ui.controller_live_status import start_controller_monitor, get_status
 
@@ -91,6 +91,19 @@ def video_feed():
 def shutdown():
     global shutdown_flag
     shutdown_flag = True
+    return redirect(url_for('dashboard'))
+
+@app.route("/start_merge", methods=["POST"])
+def start_merge():
+    try:
+        success, message = merge_and_block_controller()
+        if success:
+            set_web_status("✅ Merge completed successfully!")
+        else:
+            set_web_status(f"❌ Merge failed: {message}")
+    except Exception as e:
+        set_web_status(f"❌ Error: {str(e)}")
+
     return redirect(url_for('dashboard'))
 
 # ─── Chiaki PS5 Connection ─────────────────────────────────

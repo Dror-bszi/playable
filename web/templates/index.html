@@ -23,11 +23,20 @@
     <h1>{{ status }}</h1>
     <img src="/video_feed" width="480" />
     <br>
+
     <form action="/shutdown" method="get">
         <button type="submit">Shut Down</button>
     </form>
     <br>
+
     <a href="/controller" class="button-link">Controller Setup</a>
     <a href="/controller_status_page" class="button-link">🎮 Live Controller View</a>
+
+    <br><br>
+
+    <form action="/start_merge" method="post">
+        <button type="submit">🔵 Start Merge</button>
+    </form>
+
 </body>
 </html>

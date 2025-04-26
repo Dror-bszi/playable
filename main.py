@@ -6,34 +6,13 @@ import threading
 import time
 import os
 import sys
-import subprocess
-from evdev import UInput, ecodes as e
 
-# ─── Constants ───────────────────────────────────────────────
-BTN_CIRCLE = 305
+from core.controller_bridge import emulate_circle_press  # load_uinput already handled there
 
-# ─── Permissions and Module Checks ────────────────────────────
+# ─── Permissions Check ───────────────────────────────────────
 if os.geteuid() != 0:
     print("❌ ERROR: This script must be run with sudo -E python3 main.py")
     sys.exit(1)
-
-def load_uinput_module():
-    try:
-        subprocess.run(["modprobe", "uinput"], check=True)
-        print("[INFO] uinput kernel module loaded successfully!")
-    except subprocess.CalledProcessError:
-        print("❌ ERROR: Failed to load uinput module!")
-        sys.exit(1)
-
-load_uinput_module()
-
-# ─── Create Virtual Controller ───────────────────────────────
-capabilities = {
-    e.EV_KEY: [BTN_CIRCLE],
-}
-ui = UInput(capabilities)
-print("[INFO] Virtual controller created.")
-time.sleep(1)
 
 # ─── Initialize Camera ───────────────────────────────────────
 def find_working_camera():
@@ -47,6 +26,7 @@ def find_working_camera():
     return None
 
 cap = find_working_camera()
+
 # ─── Start Web Server ─────────────────────────────────────────
 threading.Thread(target=run_server, daemon=True).start()
 
@@ -105,7 +85,7 @@ def gesture_detection_loop():
     cap.release()
     cv2.destroyAllWindows()
 
-# ─── Start Gesture Detection Loop ─────────────────────────────
+# ─── Start Gesture Detection Thread ───────────────────────────
 threading.Thread(target=gesture_detection_loop, daemon=True).start()
 
 # ─── Main Blocking Loop ───────────────────────────────────────
