@@ -100,6 +100,10 @@ def save_mapping():
         return "OK", 200
     return "Bad Request", 400
 
+@app.route("/controller_mapping")
+def controller_mapping():
+    return render_template("mapping.html")
+
 @app.route("/scan_bluetooth", methods=["POST"])
 def scan():
     global devices
