@@ -1,26 +1,30 @@
-import subprocess
+import os
 import sys
+import time
+import subprocess
 from evdev import UInput, ecodes as e
-import time
 
+# Global Variables
+MERGED_DEVICE_PATH = None
+
+# --- Button Codes ---
+BTN_CROSS = 304
 BTN_CIRCLE = 305
-# Global variable to store merged device path
-MERGED_DEVICE_PATH = None
+BTN_TRIANGLE = 307
+BTN_SQUARE = 308
+BTN_L1 = 310
+BTN_R1 = 311
+BTN_L2 = 312
+BTN_R2 = 313
+BTN_SHARE = 314
+BTN_OPTIONS = 315
+BTN_L3 = 317
+BTN_R3 = 318
+BTN_DPAD_UP = 544
+BTN_DPAD_DOWN = 545
+BTN_DPAD_LEFT = 546
+BTN_DPAD_RIGHT = 547
 
-
-import os
-import subprocess
-import time
-
-# Global variable to store merged device path
-MERGED_DEVICE_PATH = None
-
-import os
-import subprocess
-import time
-
-# Global variable to store merged device path
-MERGED_DEVICE_PATH = None
 
 def find_dualsense_event():
     """
