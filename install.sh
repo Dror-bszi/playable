@@ -12,7 +12,7 @@ sudo apt install -y \
     libatlas-base-dev \
     libjpeg-dev \
     libgl1 \
-    bluetooth \
+    bluetooth \Y
     bluez \
     bluez-tools \
     libhidapi-hidraw0 \
