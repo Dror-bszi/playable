@@ -3,6 +3,7 @@ import sys
 from evdev import UInput, ecodes as e
 import time
 
+BTN_CIRCLE = 305
 # Global variable to store merged device path
 MERGED_DEVICE_PATH = None
 
