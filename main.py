@@ -9,8 +9,10 @@ import os
 import sys
 import subprocess
 
+# ─── Constants ───────────────────────────────────────────────
+
 BTN_CIRCLE = 305  # Linux input event code for Circle button
-EV_KEY = 1        # Linux event type for Key events (needed for device creation)
+EV_KEY = 1        # Linux event type for keys
 TEST_MODE = True  # Set to False later to disable test loop
 
 # ─── Permissions and Module Checks ─────────────────────────────
@@ -69,7 +71,7 @@ def gesture_detection_loop():
                 button = get_button_for_gesture("elbow_raised")
                 if button:
                     set_web_status(f"Pressed: {button.upper()}")
-                    # (Later: call emulate_circle_press() here if needed)
+                    # (Later: emulate_circle_press() here if needed)
                 gesture_active = True
 
             elif (not elbow_raised) and gesture_active:
@@ -90,17 +92,16 @@ threading.Thread(target=gesture_detection_loop, daemon=True).start()
 # ─── Local Circle Emulation ────────────────────────────────────
 
 device = uinput.Device([
-    BTN_CIRCLE
+    (EV_KEY, BTN_CIRCLE)
 ])
 time.sleep(1)  # Wait for device ready
 
 def emulate_circle_press():
     print("[INFO] Emulating CIRCLE press...")
     device.emit(BTN_CIRCLE, 1)  # Press
-    time.sleep(0.1)
+    time.sleep(0.1)             # Hold
     device.emit(BTN_CIRCLE, 0)  # Release
     print("[INFO] Circle Press Complete!")
-
 
 # ─── Main Loop ─────────────────────────────────────────────────
 
