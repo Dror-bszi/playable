@@ -36,14 +36,25 @@ print("[INFO] Virtual controller created.")
 time.sleep(1)
 
 # ─── Initialize Camera ───────────────────────────────────────
-cap = cv2.VideoCapture(0)
+cap = find_working_camera()
+
+def find_working_camera():
+    for i in range(3):  # check /dev/video0, /dev/video1, /dev/video2
+        cap = cv2.VideoCapture(i)
+        if cap.isOpened():
+            print(f"[INFO] Found working camera at index {i} (/dev/video{i})")
+            return cap
+        cap.release()
+    print("❌ ERROR: No working camera found.")
+    return None
 
 # ─── Start Web Server ─────────────────────────────────────────
 threading.Thread(target=run_server, daemon=True).start()
 
 # ─── Gesture Detection Loop ───────────────────────────────────
 def gesture_detection_loop():
-    if cap.isOpened():
+    if cap is not None:
+        print("[INFO] Starting gesture detection...")
         detector = GestureDetector()
 
         set_web_status("Calibrate: Hold rest position...")
