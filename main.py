@@ -1,6 +1,6 @@
 from core.gestures import GestureDetector
 from core.mappings import get_button_for_gesture
-from web.server import run_server, set_web_status, should_shutdown, start_evsieve_merge
+from web.server import run_server, set_web_status, should_shutdown
 import cv2
 import threading
 import time
