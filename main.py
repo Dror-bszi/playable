@@ -63,7 +63,7 @@ def gesture_detection_loop():
     set_web_status("Calibration complete!")
 
     # ─── Main Detection Loop ─────────────────────
-    gesture_active = {gesture: False for gesture in GESTURE_TO_BUTTON.keys()}
+    gesture_active = {gesture: False for gesture in gesture_mappings.keys()}
 
     set_web_status("Start gesture detection")
 
@@ -74,7 +74,7 @@ def gesture_detection_loop():
             time.sleep(0.5)
             continue
 
-        for gesture_name, assigned_button in GESTURE_TO_BUTTON.items():
+        for gesture_name, assigned_button in gesture_mappings.items():
             if assigned_button is None:
                 continue  # Skip gestures not mapped to buttons
 
@@ -91,7 +91,7 @@ def gesture_detection_loop():
 
             if is_detected and not gesture_active[gesture_name]:
                 set_web_status(f"Pressed: {assigned_button.upper()}")
-                emulate_circle_press()  # Later replace to send the correct button
+                emulate_circle_press()  # Later: dynamic button
                 gesture_active[gesture_name] = True
 
             elif not is_detected and gesture_active[gesture_name]:
