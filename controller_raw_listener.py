@@ -5,7 +5,8 @@ import time
 def find_controller():
     devices = [InputDevice(path) for path in list_devices()]
     for device in devices:
-        if "DualSense" in device.name or "Wireless Controller" in device.name:
+        if ("DualSense" in device.name or "Wireless Controller" in device.name) and \
+           ("Touchpad" not in device.name and "Motion" not in device.name):
             print(f"[INFO] Found controller at", device.path)
             return device
     print("[ERROR] Controller not found!")
