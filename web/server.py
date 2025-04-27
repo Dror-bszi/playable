@@ -189,4 +189,8 @@ threading.Thread(target=debug_mapping_alternate, daemon=True).start()
 
 # ─── Run Server ─────────────────────────────────────────────
 def run_server():
+    # Start debug flipping thread here
+    threading.Thread(target=debug_mapping_alternate, daemon=True).start()
+
     app.run(host='0.0.0.0', port=5000)
+
