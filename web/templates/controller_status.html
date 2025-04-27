@@ -54,6 +54,12 @@
             justify-content: space-around;
             margin-top: 1em;
         }
+        .refresh-button {
+            padding: 10px 20px;
+            font-size: 16px;
+            margin-bottom: 1em;
+            cursor: pointer;
+        }
     </style>
     <script>
         async function fetchStatus() {
@@ -61,12 +67,34 @@
                 const res = await fetch("/controller_status");
                 const data = await res.json();
 
-                if (data.connected) {
-                    document.getElementById("device-path").textContent = `✅ ${data.device_path}`;
-                } else {
-                    document.getElementById("device-path").textContent = "❌ Controller not connected.";
-                }
+                updatePanel(data, "", "Real Controller");
+                updatePanel(data.virtual || {}, "virtual", "Virtual Controller");
+                updatePanel(data.merged || {}, "merged", "Merged Controller");
 
+            } catch (err) {
+                document.getElementById("device-path-").textContent = "❌ Controller not connected.";
+            }
+        }
+
+        function updatePanel(data, suffix, title) {
+            const devicePath = document.getElementById(`device-path-${suffix}`);
+            const buttonsContainer = document.getElementById(`buttons-${suffix}`);
+            const l2Bar = document.getElementById(`l2-bar-${suffix}`);
+            const r2Bar = document.getElementById(`r2-bar-${suffix}`);
+            const lx = document.getElementById(`lx-${suffix}`);
+            const ly = document.getElementById(`ly-${suffix}`);
+            const rx = document.getElementById(`rx-${suffix}`);
+            const ry = document.getElementById(`ry-${suffix}`);
+
+            if (devicePath) {
+                if (data.connected) {
+                    devicePath.textContent = `✅ ${data.device_path}`;
+                } else {
+                    devicePath.textContent = "❌ Controller not connected.";
+                }
+            }
+
+            if (buttonsContainer) {
                 const allButtons = [
                     "KEY_304", "KEY_305", "KEY_307", "KEY_308", 
                     "KEY_310", "KEY_311", "KEY_312", "KEY_313",
@@ -77,21 +105,20 @@
                 const buttonNames = {
                     "KEY_304": "❌ Cross",
                     "KEY_305": "⭕ Circle",
-                    "KEY_307": "🔺 Triangle",  // ✅ fixed
-                    "KEY_308": "🟥 Square",    // ✅ fixed
+                    "KEY_307": "🔺 Triangle",
+                    "KEY_308": "🟥 Square",
                     "KEY_310": "L1",
                     "KEY_311": "R1",
                     "KEY_312": "L2",
                     "KEY_313": "R2",
-                    "KEY_317": "L3 (Press Left Stick)",
-                    "KEY_318": "R3 (Press Right Stick)",
+                    "KEY_317": "L3",
+                    "KEY_318": "R3",
                     "DPAD_UP": "⬆️ D-Pad Up",
                     "DPAD_DOWN": "⬇️ D-Pad Down",
                     "DPAD_LEFT": "⬅️ D-Pad Left",
                     "DPAD_RIGHT": "➡️ D-Pad Right"
                 };
 
-                const buttonsContainer = document.getElementById("buttons");
                 buttonsContainer.innerHTML = "";
                 allButtons.forEach(btn => {
                     const span = document.createElement("span");
@@ -101,16 +128,26 @@
                     }
                     buttonsContainer.appendChild(span);
                 });
+            }
 
-                document.getElementById("l2-bar").style.width = `${(data.l2 ?? 0) / 255 * 100}%`;
-                document.getElementById("r2-bar").style.width = `${(data.r2 ?? 0) / 255 * 100}%`;
-                document.getElementById("lx").textContent = data.lx ?? 0;
-                document.getElementById("ly").textContent = data.ly ?? 0;
-                document.getElementById("rx").textContent = data.rx ?? 0;
-                document.getElementById("ry").textContent = data.ry ?? 0;
+            if (l2Bar) l2Bar.style.width = `${(data.l2 ?? 0) / 255 * 100}%`;
+            if (r2Bar) r2Bar.style.width = `${(data.r2 ?? 0) / 255 * 100}%`;
+            if (lx) lx.textContent = data.lx ?? 0;
+            if (ly) ly.textContent = data.ly ?? 0;
+            if (rx) rx.textContent = data.rx ?? 0;
+            if (ry) ry.textContent = data.ry ?? 0;
+        }
 
+        async function refreshControllers() {
+            try {
+                const res = await fetch("/refresh_controller", { method: "POST" });
+                if (res.ok) {
+                    alert("✅ Controller refresh triggered!");
+                } else {
+                    alert("❌ Failed to refresh controllers.");
+                }
             } catch (err) {
-                document.getElementById("device-path").textContent = "❌ Controller not connected.";
+                alert("❌ Error contacting server.");
             }
         }
 
@@ -118,37 +155,108 @@
         window.onload = fetchStatus;
     </script>
 </head>
+
 <body>
     <h1>🎮 Live Controller Monitor</h1>
     <a href="/" class="button-link">&larr; Back to Dashboard</a>
 
+    <button onclick="refreshControllers()" class="refresh-button">🔄 Refresh Controllers</button>
+
+    <!-- Real Controller -->
+    <h2>🛠 Real Controller</h2>
     <div class="panel">
-        <strong>Device Path:</strong> <span id="device-path">Loading...</span>
+        <strong>Device Path:</strong> <span id="device-path-">Loading...</span>
     </div>
 
     <div class="panel">
         <strong>Pressed Buttons:</strong>
-        <div class="buttons" id="buttons"></div>
+        <div class="buttons" id="buttons-"></div>
     </div>
 
     <div class="panel">
         <strong>L2 Trigger</strong>
-        <div class="bar-container"><div id="l2-bar" class="bar" style="width:0%"></div></div>
+        <div class="bar-container"><div id="l2-bar-" class="bar" style="width:0%"></div></div>
 
         <strong>R2 Trigger</strong>
-        <div class="bar-container"><div id="r2-bar" class="bar" style="width:0%"></div></div>
+        <div class="bar-container"><div id="r2-bar-" class="bar" style="width:0%"></div></div>
     </div>
 
     <div class="panel">
         <strong>Joystick Positions</strong>
         <div class="joystick">
             <div>
-                <div>Left X: <span id="lx">0</span></div>
-                <div>Left Y: <span id="ly">0</span></div>
+                <div>Left X: <span id="lx-">0</span></div>
+                <div>Left Y: <span id="ly-">0</span></div>
             </div>
             <div>
-                <div>Right X: <span id="rx">0</span></div>
-                <div>Right Y: <span id="ry">0</span></div>
+                <div>Right X: <span id="rx-">0</span></div>
+                <div>Right Y: <span id="ry-">0</span></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Virtual Controller -->
+    <h2>📟 Virtual Controller</h2>
+    <div class="panel">
+        <strong>Device Path:</strong> <span id="device-path-virtual">Loading...</span>
+    </div>
+
+    <div class="panel">
+        <strong>Pressed Buttons:</strong>
+        <div class="buttons" id="buttons-virtual"></div>
+    </div>
+
+    <div class="panel">
+        <strong>L2 Trigger</strong>
+        <div class="bar-container"><div id="l2-bar-virtual" class="bar" style="width:0%"></div></div>
+
+        <strong>R2 Trigger</strong>
+        <div class="bar-container"><div id="r2-bar-virtual" class="bar" style="width:0%"></div></div>
+    </div>
+
+    <div class="panel">
+        <strong>Joystick Positions</strong>
+        <div class="joystick">
+            <div>
+                <div>Left X: <span id="lx-virtual">0</span></div>
+                <div>Left Y: <span id="ly-virtual">0</span></div>
+            </div>
+            <div>
+                <div>Right X: <span id="rx-virtual">0</span></div>
+                <div>Right Y: <span id="ry-virtual">0</span></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Merged Controller -->
+    <h2>🔀 Merged Controller</h2>
+    <div class="panel">
+        <strong>Device Path:</strong> <span id="device-path-merged">Loading...</span>
+    </div>
+
+    <div class="panel">
+        <strong>Pressed Buttons:</strong>
+        <div class="buttons" id="buttons-merged"></div>
+    </div>
+
+    <div class="panel">
+        <strong>L2 Trigger</strong>
+        <div class="bar-container"><div id="l2-bar-merged" class="bar" style="width:0%"></div></div>
+
+        <strong>R2 Trigger</strong>
+        <div class="bar-container"><div id="r2-bar-merged" class="bar" style="width:0%"></div></div>
+    </div>
+
+    <div class="panel">
+        <strong>Joystick Positions</strong>
+        <div class="joystick">
+            <div>
+                <div>Left X: <span id="lx-merged">0</span></div>
+                <div>Left Y: <span id="ly-merged">0</span></div>
+            </div>
+            <div>
+                <div>Right X: <span id="rx-merged">0</span></div>
+                <div>Right Y: <span id="ry-merged">0</span></div>
             </div>
         </div>
     </div>

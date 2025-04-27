@@ -8,7 +8,7 @@ import subprocess
 from logging.handlers import RotatingFileHandler
 from remote.device_merger import start_device_merging
 from ui import controller_bluetooth
-from ui.controller_live_status import start_controller_monitor, get_status
+from ui.controller_live_status import start_controller_monitor, get_status, get_virtual_status, get_merged_status
 
 # ─── Create Flask App Immediately ───────────────────────────
 app = Flask(__name__)
@@ -90,7 +90,16 @@ def controller_status_page():
 
 @app.route("/controller_status")
 def controller_status_data():
-    return jsonify(get_status())
+    return jsonify({
+        **get_status(),
+        "virtual": get_virtual_status(),
+        "merged": get_merged_status()
+    })
+
+@app.route("/refresh_controller", methods=["POST"])
+def refresh_controller():
+    start_controller_monitor()
+    return "Controller refresh started!", 200
 
 @app.route("/save_mapping", methods=["POST"])
 def save_mapping():
@@ -103,7 +112,6 @@ def save_mapping():
         print(f"[MAPPING] Saved: {button} mapped to {gesture}")
         return "OK", 200
     return "Bad Request", 400
-
 
 @app.route("/controller_mapping")
 def controller_mapping():
@@ -132,9 +140,7 @@ def shutdown():
 @app.route("/start_merge", methods=["POST"])
 def start_merge():
     try:
-        # Find all buttons that have gestures mapped
         mapped_buttons = list(gesture_mappings.keys())
-
         success, message = start_device_merging()
         if success:
             set_web_status("✅ Merge completed successfully!")
@@ -169,10 +175,7 @@ def start_chiaki():
         return "✅ Chiaki started! You can go back to the dashboard."
     except Exception as e:
         return f"❌ Error starting Chiaki: {str(e)}"
-    
 
 # ─── Run Server ─────────────────────────────────────────────
 def run_server():
-
     app.run(host='0.0.0.0', port=5000)
-
