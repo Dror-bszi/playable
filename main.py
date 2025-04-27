@@ -70,7 +70,7 @@ def gesture_detection_loop():
             time.sleep(0.5)
             continue
 
-        # ✅ FIX: Make a safe copy of mappings
+        # ✅ Make a safe copy to avoid dict change error
         current_mappings = gesture_mappings.copy()
 
         for button_name, gesture_name in current_mappings.items():
@@ -79,6 +79,7 @@ def gesture_detection_loop():
 
             # Detect gesture
             is_detected = False
+
             if gesture_name == "left_elbow_raised_forward":
                 is_detected = detector.is_left_elbow_raised_forward(frame)
             elif gesture_name == "mouth_open":
@@ -87,6 +88,9 @@ def gesture_detection_loop():
                 is_detected = detector.is_head_tilt_right(frame)
             elif gesture_name == "right_elbow_raised_forward":
                 is_detected = detector.is_right_elbow_raised_forward(frame)
+
+            # 🔵 Debugging every frame (even if False)
+            print(f"[DEBUG] Gesture: {gesture_name} ➔ Detected: {is_detected}")
 
             if is_detected and not gesture_active.get(gesture_name, False):
                 print(f"\n[GESTURE DETECTED] {gesture_name} ➔ {button_name.upper()}")
