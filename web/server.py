@@ -66,17 +66,18 @@ def dashboard():
 
 @app.route("/video_feed")
 def video_feed():
+    from main import cap  # Import the global cap from main.py
     def generate():
-        cap = cv2.VideoCapture(camera_index)
         while True:
+            if cap is None:
+                continue
             success, frame = cap.read()
             if not success:
-                break
+                continue
             ret, buffer = cv2.imencode('.jpg', frame)
             frame = buffer.tobytes()
             yield (b'--frame\r\n'
                    b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
-        cap.release()
     return Response(generate(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 @app.route("/controller")
