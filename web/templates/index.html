@@ -5,7 +5,6 @@
     <style>
         body { font-family: Arial; text-align: center; margin-top: 40px; }
         h1 { font-size: 2rem; }
-        img { border: 2px solid black; margin-top: 20px; }
         button { padding: 10px 20px; font-size: 1rem; margin-top: 30px; cursor: pointer; }
         a.button-link {
             display: inline-block;
@@ -20,9 +19,8 @@
     </style>
 </head>
 <body>
+
     <h1>{{ status }}</h1>
-    <img src="/video_feed" width="480" />
-    <br>
 
     <form action="/shutdown" method="get">
         <button type="submit">Shut Down</button>
