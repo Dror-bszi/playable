@@ -70,7 +70,10 @@ def gesture_detection_loop():
             time.sleep(0.5)
             continue
 
-        for button_name, gesture_name in gesture_mappings.items():
+        # ✅ FIX: Make a safe copy of mappings
+        current_mappings = gesture_mappings.copy()
+
+        for button_name, gesture_name in current_mappings.items():
             if gesture_name is None:
                 continue
 
@@ -91,7 +94,6 @@ def gesture_detection_loop():
                 press_button(button_name)
                 print("[PROMPT] ➔ Gesture triggered.")
                 gesture_active[gesture_name] = True
-
 
             elif not is_detected and gesture_active.get(gesture_name, False):
                 gesture_active[gesture_name] = False
