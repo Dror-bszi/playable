@@ -134,7 +134,7 @@ def start_merge():
         # Find all buttons that have gestures mapped
         mapped_buttons = list(gesture_mappings.keys())
 
-        success, message = start_device_merging(mapped_buttons)
+        success, message = start_device_merging()
         if success:
             set_web_status("✅ Merge completed successfully!")
         else:
