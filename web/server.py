@@ -21,6 +21,9 @@ devices = []
 connected_device = None
 gesture_mappings = {}
 
+gesture_mappings["circle"] = "mouth_open"
+print("[SETUP] Hardcoded mapping: circle ➔ mouth_open")
+
 # ─── Setter Functions ───────────────────────────────────────
 def set_camera_index(index):
     global camera_index
@@ -166,31 +169,9 @@ def start_chiaki():
     except Exception as e:
         return f"❌ Error starting Chiaki: {str(e)}"
     
-# --- Debug: Force flip mapping every 15 seconds --- #
-import threading
-
-def debug_mapping_alternate():
-    current_flip = True
-    while True:
-        if current_flip:
-            gesture_mappings.clear()
-            gesture_mappings["circle"] = "mouth_open"
-            print("[DEBUG] Mapping: circle ➔ mouth_open")
-        else:
-            gesture_mappings.clear()
-            gesture_mappings["square"] = "mouth_open"
-            print("[DEBUG] Mapping: square ➔ mouth_open")
-
-        current_flip = not current_flip
-        time.sleep(15)
-
-# Start debug flipping thread
-threading.Thread(target=debug_mapping_alternate, daemon=True).start()
 
 # ─── Run Server ─────────────────────────────────────────────
 def run_server():
-    # Start debug flipping thread here
-    threading.Thread(target=debug_mapping_alternate, daemon=True).start()
 
     app.run(host='0.0.0.0', port=5000)
 
