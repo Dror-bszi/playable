@@ -61,11 +61,11 @@ def start_device_merging():
 
     if real_device is None:
         print("❌ ERROR: Could not find real DualSense device.")
-        return False
+        return False, "No DualSense found"
 
     if virtual_device is None:
         print("❌ ERROR: Could not find virtual controller device.")
-        return False
+        return False, "No Virtual controller found"
 
     output_link = "/dev/input/by-id/merged-playable"
 
@@ -74,6 +74,7 @@ def start_device_merging():
             "evsieve",
             "--input", real_device, "grab",
             "--input", virtual_device, "grab",
+            "--rule", f"allow input {real_device} type 1",
             "--output", f"create-link={output_link}"
         ]
 
@@ -85,12 +86,12 @@ def start_device_merging():
                 MERGED_DEVICE_PATH = output_link
                 print(f"[INFO] Merged device ready at {MERGED_DEVICE_PATH}")
                 grab_real_device(real_device)
-                return True
+                return True, "Merge successful"
             time.sleep(0.5)
 
         print("❌ ERROR: Merged device link was not created.")
-        return False
+        return False, "Merged device not created"
 
     except Exception as e:
         print(f"❌ ERROR running evsieve: {e}")
-        return False
+        return False, str(e)
