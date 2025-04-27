@@ -6,6 +6,9 @@ import time
 MERGED_DEVICE_PATH = None
 
 def find_dualsense_event():
+    """
+    Find the main DualSense input event (not touchpad or motion sensors).
+    """
     try:
         base_path = "/dev/input/"
         for device in os.listdir(base_path):
@@ -20,6 +23,9 @@ def find_dualsense_event():
     return None
 
 def find_virtual_device():
+    """
+    Find the virtual controller created (py-evdev-uinput device).
+    """
     try:
         base_path = "/dev/input/"
         for device in os.listdir(base_path):
@@ -34,6 +40,9 @@ def find_virtual_device():
     return None
 
 def grab_real_device(real_device_path):
+    """
+    Grab the real DualSense device to block it from sending events directly.
+    """
     try:
         subprocess.run(["evtest", "--grab", real_device_path], check=True)
         print(f"[INFO] Grabbed {real_device_path} successfully.")
@@ -41,6 +50,9 @@ def grab_real_device(real_device_path):
         print(f"❌ ERROR grabbing {real_device_path}: {e}")
 
 def start_device_merging():
+    """
+    Merge real DualSense + Virtual device into a new device.
+    """
     global MERGED_DEVICE_PATH
 
     real_device = find_dualsense_event()
@@ -51,7 +63,7 @@ def start_device_merging():
         return False
 
     if virtual_device is None:
-        print("❌ ERROR: Could not find virtual controller device.")
+        print("❌ ERROR: Could not find virtual input device.")
         return False
 
     output_link = "/dev/input/by-id/merged-playable"
@@ -59,18 +71,19 @@ def start_device_merging():
     try:
         cmd = [
             "evsieve",
-            "--input", real_device, "grab", "allow=type:1",
+            "--input", real_device, "grab",
             "--input", virtual_device, "grab",
             "--output", f"create-link={output_link}"
         ]
-
         subprocess.Popen(cmd)
-        print(f"[INFO] Started evsieve merging {real_device} + {virtual_device} into {output_link}")
+        print(f"[INFO] Merging {real_device} + {virtual_device} into {output_link}...")
 
+        # Wait up to 5 seconds for the link to appear
         for _ in range(10):
             if os.path.exists(output_link):
                 MERGED_DEVICE_PATH = output_link
-                print(f"[INFO] Merged device ready at {MERGED_DEVICE_PATH}")
+                print(f"[INFO] Merged controller ready at {MERGED_DEVICE_PATH}")
+
                 grab_real_device(real_device)
                 return True
             time.sleep(0.5)
