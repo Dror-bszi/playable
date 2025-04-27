@@ -6,9 +6,6 @@ import time
 MERGED_DEVICE_PATH = None
 
 def find_dualsense_event():
-    """
-    Find the main DualSense input event (ignores touchpad and motion sensors).
-    """
     try:
         base_path = "/dev/input/"
         for device in os.listdir(base_path):
@@ -23,9 +20,6 @@ def find_dualsense_event():
     return None
 
 def find_virtual_device():
-    """
-    Find the virtual controller (py-evdev-uinput device).
-    """
     try:
         base_path = "/dev/input/"
         for device in os.listdir(base_path):
@@ -40,9 +34,6 @@ def find_virtual_device():
     return None
 
 def grab_real_device(real_device_path):
-    """
-    Grab the real DualSense device after merging.
-    """
     try:
         subprocess.run(["evtest", "--grab", real_device_path], check=True)
         print(f"[INFO] Grabbed {real_device_path} successfully.")
@@ -50,10 +41,6 @@ def grab_real_device(real_device_path):
         print(f"❌ ERROR grabbing {real_device_path}: {e}")
 
 def start_device_merging():
-    """
-    Merge real DualSense + Virtual Controller using evsieve.
-    Save final merged path to MERGED_DEVICE_PATH.
-    """
     global MERGED_DEVICE_PATH
 
     real_device = find_dualsense_event()
@@ -61,20 +48,19 @@ def start_device_merging():
 
     if real_device is None:
         print("❌ ERROR: Could not find real DualSense device.")
-        return False, "No DualSense found"
+        return False
 
     if virtual_device is None:
         print("❌ ERROR: Could not find virtual controller device.")
-        return False, "No Virtual controller found"
+        return False
 
     output_link = "/dev/input/by-id/merged-playable"
 
     try:
         cmd = [
             "evsieve",
-            "--input", real_device, "grab",
+            "--input", real_device, "grab", "allow=type:1",
             "--input", virtual_device, "grab",
-            "--rule", f"allow input {real_device} type 1",
             "--output", f"create-link={output_link}"
         ]
 
@@ -86,12 +72,12 @@ def start_device_merging():
                 MERGED_DEVICE_PATH = output_link
                 print(f"[INFO] Merged device ready at {MERGED_DEVICE_PATH}")
                 grab_real_device(real_device)
-                return True, "Merge successful"
+                return True
             time.sleep(0.5)
 
         print("❌ ERROR: Merged device link was not created.")
-        return False, "Merged device not created"
+        return False
 
     except Exception as e:
         print(f"❌ ERROR running evsieve: {e}")
-        return False, str(e)
+        return False
