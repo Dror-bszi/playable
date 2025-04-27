@@ -8,6 +8,9 @@ from core.gestures import GestureDetector, default_gestures
 from remote.output_bridge import press_button
 from web.server import run_server, set_web_status, should_shutdown, gesture_mappings, set_camera_index
 
+# --- Debugging Flag ---
+DEBUG_GESTURES = False  # Set to True to enable gesture detection prints
+
 # --- Permissions Check ---
 if os.geteuid() != 0:
     print("❌ ERROR: This script must be run with sudo -E python3 main.py")
@@ -70,7 +73,6 @@ def gesture_detection_loop():
             time.sleep(0.5)
             continue
 
-        # ✅ Make a safe copy to avoid dict change error
         current_mappings = gesture_mappings.copy()
 
         for button_name, gesture_name in current_mappings.items():
@@ -89,8 +91,8 @@ def gesture_detection_loop():
             elif gesture_name == "right_elbow_raised_forward":
                 is_detected = detector.is_right_elbow_raised_forward(frame)
 
-            # 🔵 Debugging every frame (even if False)
-            print(f"[DEBUG] Gesture: {gesture_name} ➔ Detected: {is_detected}")
+            if DEBUG_GESTURES:
+                print(f"[DEBUG] Gesture: {gesture_name} ➔ Detected: {is_detected}")
 
             if is_detected and not gesture_active.get(gesture_name, False):
                 print(f"\n[GESTURE DETECTED] {gesture_name} ➔ {button_name.upper()}")
