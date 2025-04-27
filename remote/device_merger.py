@@ -6,9 +6,6 @@ import time
 MERGED_DEVICE_PATH = None
 
 def find_dualsense_event():
-    """
-    Find the main DualSense input event (not touchpad or motion sensors).
-    """
     try:
         base_path = "/dev/input/"
         for device in os.listdir(base_path):
@@ -23,9 +20,6 @@ def find_dualsense_event():
     return None
 
 def find_virtual_device():
-    """
-    Find the virtual controller created (py-evdev-uinput device).
-    """
     try:
         base_path = "/dev/input/"
         for device in os.listdir(base_path):
@@ -40,57 +34,82 @@ def find_virtual_device():
     return None
 
 def grab_real_device(real_device_path):
-    """
-    Grab the real DualSense device to block it from sending events directly.
-    """
     try:
         subprocess.run(["evtest", "--grab", real_device_path], check=True)
         print(f"[INFO] Grabbed {real_device_path} successfully.")
     except subprocess.CalledProcessError as e:
         print(f"❌ ERROR grabbing {real_device_path}: {e}")
 
-def start_device_merging():
-    """
-    Merge real DualSense + Virtual device into a new device.
-    """
+def start_device_merging(mapped_buttons):
     global MERGED_DEVICE_PATH
 
     real_device = find_dualsense_event()
     virtual_device = find_virtual_device()
 
     if real_device is None:
-        print("❌ ERROR: Could not find real DualSense device.")
-        return False
+        return False, "❌ Could not find real DualSense device."
 
     if virtual_device is None:
-        print("❌ ERROR: Could not find virtual input device.")
-        return False
+        return False, "❌ Could not find virtual controller device."
 
     output_link = "/dev/input/by-id/merged-playable"
 
     try:
+        # --- Build filter rules for real controller based on mapped buttons ---
+        rules = []
+
+        # Button names to event code mapping
+        button_code_map = {
+            "circle": 305,
+            "cross": 304,
+            "square": 308,
+            "triangle": 307,
+            "l1": 310,
+            "r1": 311,
+            "l2": 312,
+            "r2": 313,
+            "share": 314,
+            "options": 315,
+            "l3": 317,
+            "r3": 318,
+            "dpad_up": 544,
+            "dpad_down": 545,
+            "dpad_left": 546,
+            "dpad_right": 547,
+        }
+
+        for button in mapped_buttons:
+            code = button_code_map.get(button.lower())
+            if code is not None:
+                rules.append(f"allow input {real_device} type 1 code {code}")
+
+        # --- Build evsieve command ---
         cmd = [
             "evsieve",
             "--input", real_device, "grab",
             "--input", virtual_device, "grab",
             "--output", f"create-link={output_link}"
         ]
-        subprocess.Popen(cmd)
-        print(f"[INFO] Merging {real_device} + {virtual_device} into {output_link}...")
 
-        # Wait up to 5 seconds for the link to appear
+        # Add rules to command
+        for rule in rules:
+            cmd += ["--rule", rule]
+
+        # Start evsieve
+        subprocess.Popen(cmd)
+        print(f"[INFO] Merging {real_device} + {virtual_device} into {output_link} with rules: {rules}")
+
+        # Wait until merged link is created
         for _ in range(10):
             if os.path.exists(output_link):
                 MERGED_DEVICE_PATH = output_link
-                print(f"[INFO] Merged controller ready at {MERGED_DEVICE_PATH}")
-
+                print(f"[INFO] Merged device ready at {MERGED_DEVICE_PATH}")
                 grab_real_device(real_device)
-                return True
+                return True, "✅ Merged successfully with gesture mapping rules."
+
             time.sleep(0.5)
 
-        print("❌ ERROR: Merged device link was not created.")
-        return False
+        return False, "❌ Merged device link was not created."
 
     except Exception as e:
-        print(f"❌ ERROR running evsieve: {e}")
-        return False
+        return False, f"❌ Error running evsieve: {e}"
