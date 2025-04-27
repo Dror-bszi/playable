@@ -96,9 +96,10 @@ def save_mapping():
     gesture = data.get("gesture")
     if button and gesture:
         gesture_mappings[button] = gesture
-        print(f"[MAPPING] {button} ➔ {gesture}")
+        print(f"[MAPPING] Saved: {button} mapped to {gesture}")
         return "OK", 200
     return "Bad Request", 400
+
 
 @app.route("/controller_mapping")
 def controller_mapping():
@@ -127,7 +128,10 @@ def shutdown():
 @app.route("/start_merge", methods=["POST"])
 def start_merge():
     try:
-        success, message = start_device_merging()
+        # Find all buttons that have gestures mapped
+        mapped_buttons = list(gesture_mappings.keys())
+
+        success, message = start_device_merging(mapped_buttons)
         if success:
             set_web_status("✅ Merge completed successfully!")
         else:
@@ -161,6 +165,27 @@ def start_chiaki():
         return "✅ Chiaki started! You can go back to the dashboard."
     except Exception as e:
         return f"❌ Error starting Chiaki: {str(e)}"
+    
+# --- Debug: Force flip mapping every 15 seconds --- #
+import threading
+
+def debug_mapping_alternate():
+    current_flip = True
+    while True:
+        if current_flip:
+            gesture_mappings.clear()
+            gesture_mappings["circle"] = "mouth_open"
+            print("[DEBUG] Mapping: circle ➔ mouth_open")
+        else:
+            gesture_mappings.clear()
+            gesture_mappings["square"] = "mouth_open"
+            print("[DEBUG] Mapping: square ➔ mouth_open")
+
+        current_flip = not current_flip
+        time.sleep(15)
+
+# Start debug flipping thread
+threading.Thread(target=debug_mapping_alternate, daemon=True).start()
 
 # ─── Run Server ─────────────────────────────────────────────
 def run_server():
