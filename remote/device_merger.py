@@ -55,8 +55,12 @@ def start_device_merging(mapped_buttons):
     output_link = "/dev/input/by-id/merged-playable"
 
     try:
-        # --- Build filter rules for real controller based on mapped buttons ---
-        rules = []
+        # --- Build evsieve command ---
+        cmd = [
+            "evsieve",
+            "--input", real_device, "grab",
+            "--input", virtual_device, "grab",
+        ]
 
         # Button names to event code mapping
         button_code_map = {
@@ -78,26 +82,21 @@ def start_device_merging(mapped_buttons):
             "dpad_right": 547,
         }
 
+        # Add allow rules for real controller buttons
         for button in mapped_buttons:
             code = button_code_map.get(button.lower())
             if code is not None:
-                rules.append(f"allow input {real_device} type 1 code {code}")
+                cmd += [
+                    "--map",
+                    f"input {real_device} type 1 code {code} input {real_device} type 1 code {code}"
+                ]
 
-        # --- Build evsieve command ---
-        cmd = [
-            "evsieve",
-            "--input", real_device, "grab",
-            "--input", virtual_device, "grab",
-            "--output", f"create-link={output_link}"
-        ]
-
-        # Add rules to command
-        for rule in rules:
-            cmd += ["--rule", rule]
+        # Final merged output
+        cmd += ["--output", f"create-link={output_link}"]
 
         # Start evsieve
         subprocess.Popen(cmd)
-        print(f"[INFO] Merging {real_device} + {virtual_device} into {output_link} with rules: {rules}")
+        print(f"[INFO] Merging {real_device} + {virtual_device} into {output_link} with mapped buttons: {mapped_buttons}")
 
         # Wait until merged link is created
         for _ in range(10):
