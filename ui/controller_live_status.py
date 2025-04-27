@@ -1,4 +1,6 @@
+import os
 import threading
+import time
 from evdev import InputDevice, ecodes, list_devices
 from remote.device_merger import MERGED_DEVICE_PATH
 
@@ -78,6 +80,19 @@ def _monitor_device(dev_path):
         status["connected"] = False
         status["error"] = str(e)
 
+def _wait_for_merged_device():
+    """
+    Wait for the merged device to appear and monitor it.
+    """
+    global MERGED_DEVICE_PATH
+    for _ in range(20):  # Try for 20 seconds
+        if MERGED_DEVICE_PATH and os.path.exists(MERGED_DEVICE_PATH):
+            threading.Thread(target=_monitor_device, args=(MERGED_DEVICE_PATH,), daemon=True).start()
+            print(f"[INFO] Started monitor thread for merged device: {MERGED_DEVICE_PATH}")
+            return
+        time.sleep(1)
+    print("[WARN] No merged controller found after waiting.")
+
 def start_controller_monitor():
     found = False
 
@@ -90,17 +105,12 @@ def start_controller_monitor():
             print(f"[INFO] Started monitor thread for real DualSense: {d.path}")
             break
 
-    # --- Merged Controller
-    if MERGED_DEVICE_PATH and os.path.exists(MERGED_DEVICE_PATH):
-        threading.Thread(target=_monitor_device, args=(MERGED_DEVICE_PATH,), daemon=True).start()
-        found = True
-        print(f"[INFO] Started monitor thread for merged device: {MERGED_DEVICE_PATH}")
-    else:
-        print("[WARN] Merged device path not found or not ready yet.")
+    # --- Monitor Merged Device after it appears
+    threading.Thread(target=_wait_for_merged_device, daemon=True).start()
 
     if not found:
         status["connected"] = False
-        status["error"] = "No DualSense or merged device found"
+        status["error"] = "No DualSense found"
 
 def get_status():
     return {

@@ -1,6 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
+<html lang="en"><head>
     <meta charset="UTF-8">
     <title>PlayAble - Map Gestures to Controller</title>
     <style>
@@ -8,7 +6,7 @@
             font-family: Arial, sans-serif;
             text-align: center;
             margin-top: 30px;
-            background-color: #f0f0f0;
+            background-color: #0a9396;
         }
         h1 {
             margin-bottom: 20px;
@@ -24,9 +22,9 @@
         }
         .button-overlay {
             position: absolute;
-            width: 50px;
-            height: 50px;
-            background-color: rgba(255, 0, 0, 0.2);
+            width: 35px;
+            height: 35px;
+            background-color: rgba(255, 0, 0, 0);
             border-radius: 50%;
             cursor: pointer;
         }
@@ -44,7 +42,7 @@
         }
     </style>
 </head>
-<body>
+<body class="vsc-initialized">
 
     <h1>🎮 Map Gestures to Buttons</h1>
 
@@ -52,10 +50,10 @@
         <img src="/static/controller.png" alt="PS5 Controller" class="controller-img">
 
         <!-- Button Overlays -->
-        <div class="button-overlay" id="cross" style="top: 370px; left: 380px;"></div>
-        <div class="button-overlay" id="circle" style="top: 320px; left: 440px;"></div>
-        <div class="button-overlay" id="square" style="top: 320px; left: 320px;"></div>
-        <div class="button-overlay" id="triangle" style="top: 270px; left: 380px;"></div>
+        <div class="button-overlay" id="cross" style="top: 230px; left: 468px;"></div>
+        <div class="button-overlay" id="circle" style="top: 185px; left: 510px;"></div>
+        <div class="button-overlay" id="square" style="top: 185px; left: 425px;"></div>
+        <div class="button-overlay" id="triangle" style="top: 145px; left: 468px;"></div>
 
         <!-- Dropdown Menu -->
         <div class="dropdown" id="dropdown">
@@ -73,7 +71,7 @@
     </div>
 
     <br><br>
-    <a href="/" style="text-decoration: none; background: #4CAF50; padding: 10px 20px; color: white; border-radius: 6px;">⬅️ Back to Dashboard</a>
+    <a href="/" style="text-decoration: none; background: #4CAF50; padding: 10px 20px; color: white; border-radius: 6px;">⬅ Back to Dashboard</a>
 
     <script>
         const buttons = document.querySelectorAll('.button-overlay');
@@ -116,5 +114,5 @@
         });
     </script>
 
-</body>
-</html>
+
+</body></html>
