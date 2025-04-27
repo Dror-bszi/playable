@@ -18,7 +18,10 @@ sudo apt install -y \
     libhidapi-hidraw0 \
     libhidapi-libusb0 \
     expect \
-    python3-uinput
+    python3-uinput \
+    cargo \
+    libevdev2 \
+    libevdev-dev
 
 # ─── Python Packages ─────────────────────────────
 pip3 install --break-system-packages --upgrade pip
@@ -27,6 +30,21 @@ pip3 install --break-system-packages mediapipe  # <-- Force separate install of 
 
 # ─── Bluetooth Auto-Pair Setup ───────────────────
 chmod +x "$(dirname "$0")/utils/pair_controller.expect"
+
+# ─── Install evsieve ─────────────────────────────
+if ! command -v evsieve &> /dev/null; then
+    echo "🎛️ Installing evsieve..."
+    cd /tmp
+    rm -rf evsieve
+    git clone https://github.com/KarsMulder/evsieve.git
+    cd evsieve
+    cargo build --release
+    sudo install -m 755 -t /usr/local/bin target/release/evsieve
+    echo "✅ evsieve installed."
+    cd ~
+else
+    echo "✔️ evsieve already installed. Skipping build."
+fi
 
 # ─── Sudo Permissions for PlayAble Tools ─────────
 USERNAME=$(whoami)
@@ -49,6 +67,7 @@ for CMD in "${CMDS[@]}"; do
 done
 
 # ─── Completion ───────────────────────────────────
-echo "✅ Installation complete!"
+echo ""
+echo "🚀 Installation complete!"
 echo "To run PlayAble:"
-echo "  python3 main.py"
+echo "  sudo -E python3 main.py"
