@@ -81,9 +81,6 @@ def _monitor_device(dev_path):
         status["error"] = str(e)
 
 def _wait_for_merged_device():
-    """
-    Wait for the merged device to appear and monitor it.
-    """
     global MERGED_DEVICE_PATH
     for _ in range(20):  # Try for 20 seconds
         if MERGED_DEVICE_PATH and os.path.exists(MERGED_DEVICE_PATH):
@@ -93,10 +90,13 @@ def _wait_for_merged_device():
         time.sleep(1)
     print("[WARN] No merged controller found after waiting.")
 
+def wait_for_merged_device():
+    """Public function to start watching merged device after it is ready"""
+    threading.Thread(target=_wait_for_merged_device, daemon=True).start()
+
 def start_controller_monitor():
     found = False
 
-    # --- Real DualSense
     devices = [InputDevice(path) for path in list_devices()]
     for d in devices:
         if 'DualSense Wireless Controller' in d.name and 'Touchpad' not in d.name and 'Motion' not in d.name:
@@ -104,9 +104,6 @@ def start_controller_monitor():
             found = True
             print(f"[INFO] Started monitor thread for real DualSense: {d.path}")
             break
-
-    # --- Monitor Merged Device after it appears
-    threading.Thread(target=_wait_for_merged_device, daemon=True).start()
 
     if not found:
         status["connected"] = False
