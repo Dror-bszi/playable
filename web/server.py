@@ -88,7 +88,7 @@ def controller_status_page():
 def controller_status_data():
     return jsonify(get_status())
 
-@app.route("/mapping")
+@app.route("/controller_mapping")
 def mapping():
     return render_template("mapping.html", gesture_mappings=gesture_mappings)
 @app.route("/save_mapping", methods=["POST"])
