@@ -66,19 +66,22 @@ def dashboard():
 
 @app.route("/video_feed")
 def video_feed():
-    from main import cap  # Import the global cap from main.py
+    from main import frame_lock, latest_frame
+    if latest_frame is None:
+        return "❌ No camera available.", 503
+
     def generate():
         while True:
-            if cap is None:
-                continue
-            success, frame = cap.read()
-            if not success:
-                continue
+            with frame_lock:
+                if latest_frame is None:
+                    continue
+                frame = latest_frame.copy()
             ret, buffer = cv2.imencode('.jpg', frame)
             frame = buffer.tobytes()
             yield (b'--frame\r\n'
                    b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
     return Response(generate(), mimetype='multipart/x-mixed-replace; boundary=frame')
+
 
 @app.route("/controller")
 def controller():

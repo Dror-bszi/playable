@@ -11,6 +11,11 @@ from web.server import run_server, set_web_status, should_shutdown, gesture_mapp
 # --- Debugging Flag ---
 DEBUG_GESTURES = False  # Set to True to enable gesture detection prints
 
+# --- Global Camera Variables ---
+cap = None
+latest_frame = None
+frame_lock = threading.Lock()
+
 # --- Permissions Check ---
 if os.geteuid() != 0:
     print("❌ ERROR: This script must be run with sudo -E python3 main.py")
@@ -30,12 +35,28 @@ def find_working_camera():
 cap, camera_index = find_working_camera()
 set_camera_index(camera_index)
 
+# --- Camera Reader Loop ---
+def camera_reader_loop():
+    global cap, latest_frame
+    if cap is None:
+        return
+    while True:
+        ret, frame = cap.read()
+        if ret:
+            with frame_lock:
+                latest_frame = frame
+        else:
+            time.sleep(0.1)
+
+# Start camera reading thread
+threading.Thread(target=camera_reader_loop, daemon=True).start()
+
 # --- Start Web Server ---
 threading.Thread(target=run_server, daemon=True).start()
 
 # --- Gesture Detection Loop ---
 def gesture_detection_loop():
-    global cap
+    global cap, latest_frame
     if cap is None:
         set_web_status("❌ No camera available. Running in UI-only mode.")
         while not should_shutdown():
@@ -50,10 +71,10 @@ def gesture_detection_loop():
     # Calibration Phase
     calibrated = False
     while not calibrated and not should_shutdown():
-        ret, frame = cap.read()
-        if not ret or frame is None:
-            print("[WARN] Failed to read frame during calibration.")
-            time.sleep(0.5)
+        with frame_lock:
+            frame = latest_frame.copy() if latest_frame is not None else None
+        if frame is None:
+            time.sleep(0.1)
             continue
         calibrated = detector.calibrate(frame)
 
@@ -63,14 +84,13 @@ def gesture_detection_loop():
 
     set_web_status("Calibration complete! Start gesture detection")
 
-    # Track which gestures are active
     gesture_active = {gesture: False for gesture in default_gestures}
 
     while not should_shutdown():
-        ret, frame = cap.read()
-        if not ret or frame is None:
-            print("[WARN] Failed to read frame.")
-            time.sleep(0.5)
+        with frame_lock:
+            frame = latest_frame.copy() if latest_frame is not None else None
+        if frame is None:
+            time.sleep(0.1)
             continue
 
         current_mappings = gesture_mappings.copy()
@@ -79,7 +99,6 @@ def gesture_detection_loop():
             if gesture_name is None:
                 continue
 
-            # Detect gesture
             is_detected = False
 
             if gesture_name == "left_elbow_raised_forward":
@@ -98,7 +117,6 @@ def gesture_detection_loop():
                 print(f"\n[GESTURE DETECTED] {gesture_name} ➔ {button_name.upper()}")
                 set_web_status(f"Pressed: {button_name.upper()}")
                 press_button(button_name)
-                print("[PROMPT] ➔ Gesture triggered.")
                 gesture_active[gesture_name] = True
 
             elif not is_detected and gesture_active.get(gesture_name, False):
