@@ -26,8 +26,12 @@ class GestureDetector:
 
         if pose_results.pose_landmarks:
             elbow = pose_results.pose_landmarks.landmark[mp.solutions.pose.PoseLandmark.LEFT_ELBOW]
+            shoulder = pose_results.pose_landmarks.landmark[mp.solutions.pose.PoseLandmark.LEFT_SHOULDER]
+
             nose = pose_results.pose_landmarks.landmark[mp.solutions.pose.PoseLandmark.NOSE]
             self.reference_points["left_elbow_y"] = elbow.y
+            self.reference_points["left_shoulder_y"] = shoulder.y
+
             self.reference_points["nose_x"] = nose.x
             success = True
 
@@ -47,8 +51,9 @@ class GestureDetector:
         pose_results = self.pose.process(rgb)
 
         if pose_results.pose_landmarks and "left_elbow_y" in self.reference_points:
-            current_y = pose_results.pose_landmarks.landmark[mp.solutions.pose.PoseLandmark.LEFT_ELBOW].y
-            delta = self.reference_points["left_elbow_y"] - current_y
+            current_elbow_y = pose_results.pose_landmarks.landmark[mp.solutions.pose.PoseLandmark.LEFT_ELBOW].y
+            current_shoulder_y = pose_results.pose_landmarks.landmark[mp.solutions.pose.PoseLandmark.LEFT_SHOULDER].y
+            delta = current_shoulder_y - current_elbow_y
             return delta >= threshold
         return False
 

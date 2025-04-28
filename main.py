@@ -78,12 +78,12 @@ def gesture_detection_loop():
             is_detected = False
             if gesture_name == "left_elbow_raised_forward":
                 is_detected = detector.is_left_elbow_raised_forward(frame)
-            elif gesture_name == "mouth_open":
-                is_detected = detector.is_mouth_open(frame)
-            elif gesture_name == "head_tilt_right":
-                is_detected = detector.is_head_tilt_right(frame)
-            elif gesture_name == "right_elbow_raised_forward":
-                is_detected = detector.is_right_elbow_raised_forward(frame)
+            # elif gesture_name == "mouth_open":
+            #     is_detected = detector.is_mouth_open(frame)
+            # elif gesture_name == "head_tilt_right":
+            #     is_detected = detector.is_head_tilt_right(frame)
+            # elif gesture_name == "right_elbow_raised_forward":
+            #     is_detected = detector.is_right_elbow_raised_forward(frame)
 
             if is_detected and not gesture_active.get(gesture_name, False):
                 print(f"[GESTURE] {gesture_name} detected! Pressing {button_name}")
