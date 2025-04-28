@@ -42,15 +42,29 @@ class GestureDetector:
         return success
 
     def is_elbow_raised_forward(self, frame, threshold=0.10):
-        """Detects if left elbow is raised forward."""
+        "Detects if right elbow is raised forward, normalized to shoulder distance."
         rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         pose_results = self.pose.process(rgb)
 
-        if pose_results.pose_landmarks and "left_elbow_y" in self.reference_points:
-            current_y = pose_results.pose_landmarks.landmark[mp.solutions.pose.PoseLandmark.LEFT_ELBOW].y
-            delta = self.reference_points["left_elbow_y"] - current_y
-            return delta >= threshold
+        if pose_results.pose_landmarks:
+            landmarks = pose_results.pose_landmarks.landmark
+
+            # Get shoulders and elbow
+            shoulder_right = landmarks[mp.solutions.pose.PoseLandmark.RIGHT_SHOULDER]
+            shoulder_left = landmarks[mp.solutions.pose.PoseLandmark.LEFT_SHOULDER]
+            elbow_right = landmarks[mp.solutions.pose.PoseLandmark.RIGHT_ELBOW]
+
+            # Calculate shoulder-to-shoulder distance (scale reference)
+            shoulder_distance = abs(shoulder_right.x - shoulder_left.x)
+
+            if shoulder_distance > 0:
+                normalized_raise = (shoulder_right.y - elbow_right.y) / shoulder_distance
+                return normalized_raise >= threshold
+            else:
+                return False
+
         return False
+
 
     def is_mouth_open(self, frame, threshold=0.05):
         """Detects if mouth is open."""

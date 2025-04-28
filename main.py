@@ -105,29 +105,29 @@ def gesture_detection_loop():
             time.sleep(0.5)
             continue
 
-        for button_name, gesture_name in gesture_mappings.items():
-            if gesture_name is None:
-                continue
+        # for button_name, gesture_name in gesture_mappings.items():
+        #     if gesture_name is None:
+        #         continue
 
-            is_detected = False
-            if gesture_name == "left_elbow_raised_forward":
-                is_detected = detector.is_left_elbow_raised_forward(frame)
-            elif gesture_name == "mouth_open":
-                is_detected = detector.is_mouth_open(frame)
-            elif gesture_name == "head_tilt_right":
-                is_detected = detector.is_head_tilt_right(frame)
-            elif gesture_name == "right_elbow_raised_forward":
-                is_detected = detector.is_right_elbow_raised_forward(frame)
+            # is_detected = False
+        gesture_name = "left_elbow_raised_forward"
+        is_detected = detector.is_elbow_raised_forward(frame)
+            # elif gesture_name == "mouth_open":
+            #     is_detected = detector.is_mouth_open(frame)
+            # elif gesture_name == "head_tilt_right":
+            #     is_detected = detector.is_head_tilt_right(frame)
+            # elif gesture_name == "right_elbow_raised_forward":
+            #     is_detected = detector.is_right_elbow_raised_forward(frame)
 
-            if is_detected and not gesture_active.get(gesture_name, False):
-                print(f"[GESTURE] {gesture_name} detected! Pressing {button_name}")
-                set_web_status(f"Pressed: {button_name.upper()}")
-                press_button(button_name)
-                gesture_active[gesture_name] = True
+        if is_detected and not gesture_active.get(gesture_name, False):
+            print(f"[GESTURE] {gesture_name} detected! Pressing {button_name}")
+            set_web_status(f"Pressed: {button_name.upper()}")
+            press_button(button_name)
+            gesture_active[gesture_name] = True
 
-            elif not is_detected and gesture_active.get(gesture_name, False):
-                gesture_active[gesture_name] = False
-                set_web_status("Waiting for gesture...")
+        elif not is_detected and gesture_active.get(gesture_name, False):
+            gesture_active[gesture_name] = False
+            set_web_status("Waiting for gesture...")
 
 # --- Main ---
 if __name__ == "__main__":
