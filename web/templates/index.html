@@ -6,7 +6,7 @@
         body { font-family: Arial; text-align: center; margin-top: 40px; }
         h1 { font-size: 2rem; }
         img { border: 2px solid black; margin-top: 20px; }
-        button { padding: 10px 20px; font-size: 1rem; margin-top: 30px; cursor: pointer; }
+        button { padding: 10px 20px; font-size: 1rem; margin-top: 20px; cursor: pointer; }
         a.button-link {
             display: inline-block;
             padding: 10px 20px;
@@ -20,15 +20,13 @@
     </style>
 </head>
 <body>
+
+    <!-- Optional: if you want to show status and live feed later -->
     <!-- <h1>{{ status }}</h1>
     <img src="/video_feed" width="480" />
     <br> -->
 
-    <form action="/shutdown" method="get">
-        <button type="submit">Shut Down</button>
-    </form>
-    <br>
-
+    <!-- Navigation Buttons -->
     <a href="/controller" class="button-link">Controller Setup</a>
     <a href="/controller_status_page" class="button-link">🎮 Live Controller View</a>
     <a href="/controller_mapping" class="button-link">🖐️ Gesture Mapping</a>
@@ -37,6 +35,20 @@
 
     <form action="/start_merge" method="post">
         <button type="submit">🔵 Start Merge</button>
+    </form>
+
+    <br>
+
+    <!-- New Play Button -->
+    <form action="/start_play" method="post">
+        <button type="submit" style="background-color: #1e90ff; color: white;">▶️ Play</button>
+    </form>
+
+    <br>
+
+    <!-- Moved Shutdown Button BELOW all -->
+    <form action="/shutdown" method="get">
+        <button type="submit" style="background-color: #ff4d4d; color: white;">🔴 Shut Down</button>
     </form>
 
 </body>
