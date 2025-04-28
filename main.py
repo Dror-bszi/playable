@@ -58,6 +58,24 @@ def gesture_detection_loop():
     print("[INFO] Starting gesture detection...")
     detector = GestureDetector()
 
+    # --- WAIT FOR CAMERA TO BECOME READY ---
+    print("[INFO] Waiting for camera to become ready...")
+    ready = False
+    retries = 0
+    while not ready and retries < 30 and not should_shutdown():  # wait up to ~3 seconds
+        ret, frame = cap.read()
+        if ret and frame is not None:
+            ready = True
+        else:
+            retries += 1
+            time.sleep(0.1)
+
+    if not ready:
+        print("❌ ERROR: Camera not ready after multiple attempts.")
+        return
+
+    print("[INFO] Camera ready. Starting calibration...")
+
     set_web_status("Calibrate: Hold rest position...")
 
     # Calibration Phase
@@ -73,6 +91,8 @@ def gesture_detection_loop():
     if not calibrated:
         print("❌ Calibration failed.")
         return
+
+    print("[INFO] Calibration complete. Starting gesture detection...")
 
     set_web_status("Calibration complete! Start gesture detection")
 
