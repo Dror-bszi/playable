@@ -69,7 +69,7 @@ def gesture_detection_loop():
             print("[WARN] Failed to read frame.")
             time.sleep(0.5)
             continue
-        
+
         # Detect gesture
         is_detected = False
         gesture_name = "left_elbow_raised_forward"
@@ -83,7 +83,7 @@ def gesture_detection_loop():
 
         if is_detected and not gesture_active.get(gesture_name, False):
             print(f"[GESTURE] {gesture_name} detected! Pressing circle")
-            set_web_status(f"Pressed: {"circle"}")
+            set_web_status("Pressed: circle")
             press_button("circle")
             gesture_active[gesture_name] = True
 
