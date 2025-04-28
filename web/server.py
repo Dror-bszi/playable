@@ -203,30 +203,6 @@ def start_merge():
 
     return redirect(url_for('dashboard'))
 
-@app.route("/chiaki_connect")
-def chiaki_connect():
-    return render_template("chiaki_connect.html")
-
-@app.route("/start_chiaki", methods=["POST"])
-def start_chiaki():
-    ps5_ip = request.form.get("ps5_ip")
-    psn_id = request.form.get("psn_id")
-    pin = request.form.get("pin")
-
-    if not all([ps5_ip, psn_id, pin]):
-        return "❌ Missing data. Please fill all fields."
-
-    try:
-        cmd = [
-            "chiaki",
-            "--host", ps5_ip,
-            "--psn-account-id", psn_id,
-            "--pin", pin
-        ]
-        subprocess.Popen(cmd)
-        return "✅ Chiaki started! You can go back to the dashboard."
-    except Exception as e:
-        return f"❌ Error starting Chiaki: {str(e)}"
 
 # ─── Run Server ─────────────────────────────────────────────
 def run_server():
