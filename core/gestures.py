@@ -33,6 +33,7 @@ class GestureDetector:
         if pose_results.pose_landmarks:
             landmarks = pose_results.pose_landmarks.landmark
             # Get shoulders and elbow
+            print("elbow_raised_forward")
             shoulder_right = landmarks[mp.solutions.pose.PoseLandmark.RIGHT_SHOULDER]
             shoulder_left = landmarks[mp.solutions.pose.PoseLandmark.LEFT_SHOULDER]
             elbow_left = landmarks[mp.solutions.pose.PoseLandmark.LEFT_ELBOW]
