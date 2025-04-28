@@ -152,6 +152,12 @@ def controller_status_data():
 def mapping():
     return render_template("mapping.html", gesture_mappings=gesture_mappings)
 
+@app.route("/current_elbow_value")
+def current_elbow_value():
+    return jsonify({
+        "elbow_value": get_current_elbow_raise()
+    })
+
 @app.route("/save_mapping", methods=["POST"])
 def save_mapping():
     global gesture_mappings

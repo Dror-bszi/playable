@@ -21,34 +21,10 @@
 </head>
 <body>
 
-    <!-- Navigation Buttons -->
-    <a href="/controller" class="button-link">Controller Setup</a>
-    <a href="/controller_status_page" class="button-link">🎮 Live Controller View</a>
-    <a href="/controller_mapping" class="button-link">🖐️ Gesture Mapping</a>
+    <!-- Title -->
+    <h1>🎯 PlayAble Control Dashboard</h1>
 
-    <br><br>
-
-    <form action="/start_merge" method="post">
-        <button type="submit">🔵 Start Merge</button>
-    </form>
-
-    <br>
-
-    <!-- Play Button -->
-    <form action="/start_play" method="post">
-        <button type="submit" style="background-color: #1e90ff; color: white;">▶️ Play</button>
-    </form>
-
-    <br>
-
-    <!-- Shutdown Button -->
-    <form action="/shutdown" method="post">
-        <button type="submit" style="background-color: #ff4d4d; color: white;">🔴 Shut Down</button>
-    </form>
-
-    <br><br>
-
-    <!-- Threshold Adjustments -->
+    <!-- Threshold Adjustment First -->
     <h2>⚡ Threshold Settings</h2>
 
     <form action="/adjust_threshold" method="post" style="display:inline;">
@@ -75,9 +51,37 @@
 
     <br><br>
 
-    <!-- Display Current Thresholds -->
+    <!-- Current Threshold Display -->
     <h3>Current Δ Threshold: {{ current_delta }}</h3>
     <h3>Current Raise Minimum: {{ current_raise }}</h3>
+
+    <br><hr><br>
+
+    <!-- Navigation Links -->
+    <a href="/controller" class="button-link">Controller Setup</a>
+    <a href="/controller_status_page" class="button-link">🎮 Live Controller View</a>
+    <a href="/controller_mapping" class="button-link">🖐️ Gesture Mapping</a>
+
+    <br><br>
+
+    <!-- Merge Button -->
+    <form action="/start_merge" method="post">
+        <button type="submit">🔵 Start Merge</button>
+    </form>
+
+    <br>
+
+    <!-- Play Button -->
+    <form action="/start_play" method="post">
+        <button type="submit" style="background-color: #1e90ff; color: white;">▶️ Play</button>
+    </form>
+
+    <br>
+
+    <!-- Shutdown Button -->
+    <form action="/shutdown" method="post">
+        <button type="submit" style="background-color: #ff4d4d; color: white;">🔴 Shut Down</button>
+    </form>
 
 </body>
 </html>

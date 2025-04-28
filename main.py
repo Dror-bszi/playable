@@ -6,7 +6,7 @@ import threading
 
 from core.gestures import GestureDetector, default_gestures
 from remote.output_bridge import press_button
-from web.server import run_server, set_web_status, should_shutdown, gesture_mappings, set_camera_index, set_shared_frame, is_play_mode
+from web.server import run_server, set_web_status, should_shutdown, set_current_elbow_raise, set_camera_index, set_shared_frame, is_play_mode
 
 # --- Permissions Check ---
 if os.geteuid() != 0:
@@ -46,10 +46,18 @@ def camera_worker():
         else:
             time.sleep(1)
 
-# --- Gesture Detection Loop (Real-Time) ---
 # Adjustable global thresholds
 delta_threshold = 0.05  # How fast elbow must raise (movement)
 min_normalized_raise = 0.05  # How much elbow must already be lifted
+# --- Current Elbow Raise Value (Live) ---
+current_elbow_raise = 0.0
+
+def set_current_elbow_raise(value):
+    global current_elbow_raise
+    current_elbow_raise = value
+
+def get_current_elbow_raise():
+    return current_elbow_raise
 
 def set_delta_threshold(value):
     global delta_threshold
@@ -64,6 +72,9 @@ def set_min_normalized_raise(value):
 
 def get_min_normalized_raise():
     return min_normalized_raise
+
+
+# --- Gesture Detection Loop (Real-Time) ---
 
 def gesture_detection_loop():
     try:

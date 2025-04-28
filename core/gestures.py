@@ -2,6 +2,7 @@
 import mediapipe as mp
 import cv2
 import time
+from web.server import set_current_elbow_raise  # add import at the top
 
 # --- Import thresholds from main.py (or shared config) ---
 try:
@@ -61,7 +62,8 @@ class GestureDetector:
                 return False  # Avoid division by almost zero
 
             normalized_elbow_y = (shoulder_right.y - elbow_left.y) / shoulder_distance
-
+            set_current_elbow_raise(normalized_elbow_y)  # Update the current elbow raise value
+            # Update the last elbow Y value for fast detection  
             threshold = get_delta_threshold()
             min_raise = get_min_normalized_raise()
 
