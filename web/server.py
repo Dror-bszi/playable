@@ -21,6 +21,13 @@ devices = []
 connected_device = None
 gesture_mappings = {}
 
+
+# Play Mode Flag
+play_mode = False
+
+def is_play_mode():
+    return play_mode
+
 # Shared frame for Web UI
 shared_frame = None
 frame_lock = threading.Lock()
