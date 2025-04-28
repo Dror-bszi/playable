@@ -7,6 +7,6 @@ cd "$(dirname "$0")"
 git reset --hard
 
 # Pull the latest changes
-git pull origin main
+git pull origin late-night
 
 echo "✅ Update complete!"
