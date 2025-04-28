@@ -74,27 +74,7 @@ def gesture_detection_loop():
         print("❌ ERROR: Camera not ready after multiple attempts.")
         return
 
-    print("[INFO] Camera ready. Starting calibration...")
-
-    set_web_status("Calibrate: Hold rest position...")
-
-    # Calibration Phase
-    calibrated = False
-    while not calibrated and not should_shutdown():
-        ret, frame = cap.read()
-        if not ret or frame is None:
-            print("[WARN] Failed to read frame during calibration.")
-            time.sleep(0.5)
-            continue
-        calibrated = detector.calibrate(frame)
-
-    if not calibrated:
-        print("❌ Calibration failed.")
-        return
-
-    print("[INFO] Calibration complete. Starting gesture detection...")
-
-    set_web_status("Calibration complete! Start gesture detection")
+    print("[INFO] Camera ready")
 
     gesture_active = {gesture: False for gesture in default_gestures}
 
@@ -104,20 +84,9 @@ def gesture_detection_loop():
             print("[WARN] Failed to read frame.")
             time.sleep(0.5)
             continue
-
-        # for button_name, gesture_name in gesture_mappings.items():
-        #     if gesture_name is None:
-        #         continue
-
-            # is_detected = False
+            
         gesture_name = "left_elbow_raised_forward"
         is_detected = detector.is_elbow_raised_forward(frame)
-            # elif gesture_name == "mouth_open":
-            #     is_detected = detector.is_mouth_open(frame)
-            # elif gesture_name == "head_tilt_right":
-            #     is_detected = detector.is_head_tilt_right(frame)
-            # elif gesture_name == "right_elbow_raised_forward":
-            #     is_detected = detector.is_right_elbow_raised_forward(frame)
         button_name = "circle"
 
         if is_detected and not gesture_active.get(gesture_name, False):

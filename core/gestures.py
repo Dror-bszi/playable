@@ -20,24 +20,8 @@ class GestureDetector:
         """Calibrates the reference points for all gestures."""
         rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         pose_results = self.pose.process(rgb)
-        face_results = self.face_mesh.process(rgb)
-
-        success = False
-
-        if pose_results.pose_landmarks:
-            elbow = pose_results.pose_landmarks.landmark[mp.solutions.pose.PoseLandmark.LEFT_ELBOW]
-            nose = pose_results.pose_landmarks.landmark[mp.solutions.pose.PoseLandmark.NOSE]
-            self.reference_points["left_elbow_y"] = elbow.y
-            self.reference_points["nose_x"] = nose.x
-            success = True
-
-        if face_results.multi_face_landmarks:
-            landmarks = face_results.multi_face_landmarks[0].landmark
-            top_lip = landmarks[13]  # Upper lip center
-            bottom_lip = landmarks[14]  # Lower lip center
-            initial_mouth_distance = abs(top_lip.y - bottom_lip.y)
-            self.reference_points["mouth_open_dist"] = initial_mouth_distance
-            success = True
+        success = False                        
+        success = True
 
         return success
 
@@ -48,45 +32,18 @@ class GestureDetector:
 
         if pose_results.pose_landmarks:
             landmarks = pose_results.pose_landmarks.landmark
-
             # Get shoulders and elbow
             shoulder_right = landmarks[mp.solutions.pose.PoseLandmark.RIGHT_SHOULDER]
             shoulder_left = landmarks[mp.solutions.pose.PoseLandmark.LEFT_SHOULDER]
-            elbow_right = landmarks[mp.solutions.pose.PoseLandmark.RIGHT_ELBOW]
+            elbow_left = landmarks[mp.solutions.pose.PoseLandmark.LEFT_ELBOW]
 
             # Calculate shoulder-to-shoulder distance (scale reference)
             shoulder_distance = abs(shoulder_right.x - shoulder_left.x)
 
             if shoulder_distance > 0:
-                normalized_raise = (shoulder_right.y - elbow_right.y) / shoulder_distance
+                normalized_raise = (shoulder_right.y - elbow_left.y) / shoulder_distance
                 return normalized_raise >= threshold
             else:
                 return False
 
-        return False
-
-
-    def is_mouth_open(self, frame, threshold=0.05):
-        """Detects if mouth is open."""
-        rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        face_results = self.face_mesh.process(rgb)
-
-        if face_results.multi_face_landmarks and "mouth_open_dist" in self.reference_points:
-            landmarks = face_results.multi_face_landmarks[0].landmark
-            top_lip = landmarks[13]
-            bottom_lip = landmarks[14]
-            current_distance = abs(top_lip.y - bottom_lip.y)
-            delta = current_distance - self.reference_points["mouth_open_dist"]
-            return delta >= threshold
-        return False
-
-    def is_head_tilted_right(self, frame, threshold=0.1):
-        """Detects if head tilted to the right."""
-        rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        pose_results = self.pose.process(rgb)
-
-        if pose_results.pose_landmarks and "nose_x" in self.reference_points:
-            current_x = pose_results.pose_landmarks.landmark[mp.solutions.pose.PoseLandmark.NOSE].x
-            delta = current_x - self.reference_points["nose_x"]
-            return delta >= threshold
         return False
