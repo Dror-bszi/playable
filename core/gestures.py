@@ -27,7 +27,7 @@ class GestureDetector:
         if pose_results.pose_landmarks:
             elbow = pose_results.pose_landmarks.landmark[mp.solutions.pose.PoseLandmark.LEFT_ELBOW]
             nose = pose_results.pose_landmarks.landmark[mp.solutions.pose.PoseLandmark.NOSE]
-            self.reference_points["left_elbow_z"] = elbow.z
+            self.reference_points["left_elbow_y"] = elbow.y
             self.reference_points["nose_x"] = nose.x
             success = True
 
@@ -46,9 +46,9 @@ class GestureDetector:
         rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         pose_results = self.pose.process(rgb)
 
-        if pose_results.pose_landmarks and "left_elbow_z" in self.reference_points:
-            current_z = pose_results.pose_landmarks.landmark[mp.solutions.pose.PoseLandmark.LEFT_ELBOW].z
-            delta = self.reference_points["left_elbow_z"] - current_z
+        if pose_results.pose_landmarks and "left_elbow_y" in self.reference_points:
+            current_y = pose_results.pose_landmarks.landmark[mp.solutions.pose.PoseLandmark.LEFT_ELBOW].y
+            delta = self.reference_points["left_elbow_y"] - current_y
             return delta >= threshold
         return False
 
