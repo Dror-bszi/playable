@@ -48,6 +48,11 @@ def camera_worker():
 
 # --- Gesture Detection Loop (Real-Time) ---
 def gesture_detection_loop():
+    try:
+        os.nice(-10)
+        print("[INFO] Gesture Detection Thread priority increased (nice -10).")
+    except Exception as e:
+        print(f"[WARN] Failed to set nice priority: {e}")
     global cap
     if cap is None:
         set_web_status("❌ No camera available. Running in UI-only mode.")
@@ -82,7 +87,7 @@ def gesture_detection_loop():
         ret, frame = cap.read()
         if not ret or frame is None:
             print("[WARN] Failed to read frame.")
-            time.sleep(0.5)
+            time.sleep(0.01)
             continue
 
         gesture_name = "left_elbow_raised_forward"
