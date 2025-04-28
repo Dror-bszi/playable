@@ -22,7 +22,7 @@ BUTTON_MAPPING = {
 }
 
 # --- Function to Press Button ---
-def press_button(button_name, hold_time=0.1):
+def press_button(button_name, hold_time=0.01):
     button_code = BUTTON_MAPPING.get(button_name.lower())
     if button_code is None:
         print(f"❌ ERROR: Unknown button name: {button_name}")
