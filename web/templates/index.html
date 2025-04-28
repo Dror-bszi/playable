@@ -16,6 +16,14 @@
             border-radius: 4px;
             margin-right: 10px;
         }
+        .video-container {
+            margin-top: 30px;
+        }
+        .video-container img {
+            width: 640px;
+            height: auto;
+            border: 2px solid #333;
+        }
     </style>
 </head>
 <body>
@@ -36,6 +44,12 @@
     <form action="/start_merge" method="post">
         <button type="submit">🔵 Start Merge</button>
     </form>
+
+    
+    <div class="video-container">
+        <h2>📷 Live Camera Feed</h2>
+        <img src="/video_feed" alt="Live Camera Feed">
+    </div>
 
 </body>
 </html>
