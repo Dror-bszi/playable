@@ -50,7 +50,7 @@ class GestureDetector:
         rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         pose_results = self.pose.process(rgb)
 
-        if pose_results.pose_landmarks and "left_elbow_y" in self.reference_points:
+        if pose_results.pose_landmarks and ("left_elbow_y"and "left_shoulder_y") in self.reference_points:
             current_elbow_y = pose_results.pose_landmarks.landmark[mp.solutions.pose.PoseLandmark.LEFT_ELBOW].y
             current_shoulder_y = pose_results.pose_landmarks.landmark[mp.solutions.pose.PoseLandmark.LEFT_SHOULDER].y
             delta = current_shoulder_y - current_elbow_y
