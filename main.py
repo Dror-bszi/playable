@@ -6,7 +6,7 @@ import threading
 
 from core.gestures import GestureDetector, default_gestures
 from remote.output_bridge import press_button
-from web.server import run_server, set_web_status, should_shutdown, gesture_mappings, set_camera_index, set_shared_frame
+from web.server import run_server, set_web_status, should_shutdown, gesture_mappings, set_camera_index, set_shared_frame, is_play_mode
 
 # --- Permissions Check ---
 if os.geteuid() != 0:
@@ -84,7 +84,7 @@ def gesture_detection_loop():
             print("[WARN] Failed to read frame.")
             time.sleep(0.5)
             continue
-            
+
         gesture_name = "left_elbow_raised_forward"
         is_detected = detector.is_elbow_raised_forward(frame)
         button_name = "circle"
@@ -104,14 +104,16 @@ if __name__ == "__main__":
     cap, camera_index = find_working_camera()
     set_camera_index(camera_index)
 
-    # Start camera capture thread (only for Web UI)
-    threading.Thread(target=camera_worker, daemon=True).start()
-
-    # Start Web server
+        # Start Web server first
     threading.Thread(target=run_server, daemon=True).start()
 
-    # Start Gesture Detection (main)
+    # Always start Gesture Detection (needed in both modes)
     threading.Thread(target=gesture_detection_loop, daemon=True).start()
+
+    # Start extra threads only if not in Play Mode
+    
+    #threading.Thread(target=camera_worker, daemon=True).start()
+        # (In future: also start other non-critical threads here)
 
     try:
         while True:

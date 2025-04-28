@@ -72,10 +72,19 @@ werkzeug_logger.propagate = False
 start_controller_monitor()
 
 # ─── Web Routes ─────────────────────────────────────────────
+@app.route("/start_play", methods=["POST"])
+def start_play():
+    global play_mode, shutdown_flag
+    play_mode = True
+    
+    print("[MODE] Switched to Play Mode: minimal processes running.")
+    set_web_status("▶️ Play Mode Active - Optimized for fastest detection.")
+    return redirect(url_for('dashboard'))
 
 @app.route("/")
 def dashboard():
     return render_template("index.html", status=status)
+
 
 @app.route("/video_feed")
 def video_feed():
