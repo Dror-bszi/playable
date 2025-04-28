@@ -3,6 +3,16 @@ import mediapipe as mp
 import cv2
 import time
 
+# --- Import thresholds from main.py (or shared config) ---
+try:
+    from main import get_delta_threshold, get_min_normalized_raise
+except ImportError:
+    # Fallback if running gestures.py directly (for testing)
+    def get_delta_threshold():
+        return 0.05
+    def get_min_normalized_raise():
+        return 0.05
+
 # --- Default Gestures ---
 default_gestures = [
     "left_elbow_raised_forward",
@@ -13,21 +23,22 @@ default_gestures = [
 
 class GestureDetector:
     def __init__(self):
-        self.pose = mp.solutions.pose.Pose(model_complexity=0)  # Lightweight model
+        self.pose = mp.solutions.pose.Pose(model_complexity=0)  # Lightweight pose model for speed
         self.face_mesh = mp.solutions.face_mesh.FaceMesh(refine_landmarks=True)
         self.reference_points = {}
 
-        # For fast movement detection
+        # Fast detection memory
         self.last_elbow_y = None
         self.last_detection_time = time.time()
 
     def calibrate(self, frame):
-        """Dummy calibrate for compatibility."""
+        """Dummy calibrate (kept for compatibility)."""
         return True
 
-    def is_elbow_raised_forward(self, frame, delta_threshold=0.03, min_interval=0.1):
+    def is_elbow_raised_forward(self, frame, min_interval=0.1):
         """
-        Fast detection: Detect sudden left elbow raise based on frame-to-frame delta.
+        Fast detection: Detect sudden left elbow raise based on frame-to-frame delta,
+        using global adjustable thresholds.
         """
         if frame is None:
             return False
@@ -47,15 +58,22 @@ class GestureDetector:
             shoulder_distance = abs(shoulder_right.x - shoulder_left.x)
 
             if shoulder_distance < 1e-5:
-                return False
+                return False  # Avoid division by almost zero
 
             normalized_elbow_y = (shoulder_right.y - elbow_left.y) / shoulder_distance
 
+            threshold = get_delta_threshold()
+            min_raise = get_min_normalized_raise()
+
             if self.last_elbow_y is not None:
                 delta = normalized_elbow_y - self.last_elbow_y
-
                 now = time.time()
-                if delta >= delta_threshold and (now - self.last_detection_time) >= min_interval:
+
+                if (
+                    normalized_elbow_y > min_raise and
+                    delta >= threshold and
+                    (now - self.last_detection_time) >= min_interval
+                ):
                     self.last_elbow_y = normalized_elbow_y
                     self.last_detection_time = now
                     return True

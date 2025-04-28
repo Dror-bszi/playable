@@ -21,7 +21,6 @@ devices = []
 connected_device = None
 gesture_mappings = {}
 
-
 # Play Mode Flag
 play_mode = False
 
@@ -31,6 +30,24 @@ def is_play_mode():
 # Shared frame for Web UI
 shared_frame = None
 frame_lock = threading.Lock()
+
+# Thresholds for live tuning
+delta_threshold = 0.05
+min_normalized_raise = 0.05
+
+def get_delta_threshold():
+    return delta_threshold
+
+def set_delta_threshold(value):
+    global delta_threshold
+    delta_threshold = value
+
+def get_min_normalized_raise():
+    return min_normalized_raise
+
+def set_min_normalized_raise(value):
+    global min_normalized_raise
+    min_normalized_raise = value
 
 # ─── Setter Functions ───────────────────────────────────────
 def set_camera_index(index):
@@ -74,17 +91,35 @@ start_controller_monitor()
 # ─── Web Routes ─────────────────────────────────────────────
 @app.route("/start_play", methods=["POST"])
 def start_play():
-    global play_mode, shutdown_flag
+    global play_mode
     play_mode = True
-    
     print("[MODE] Switched to Play Mode: minimal processes running.")
     set_web_status("▶️ Play Mode Active - Optimized for fastest detection.")
     return redirect(url_for('dashboard'))
 
 @app.route("/")
 def dashboard():
-    return render_template("index.html", status=status)
+    return render_template(
+        "index.html",
+        status=status,
+        current_delta=get_delta_threshold(),
+        current_raise=get_min_normalized_raise()
+    )
 
+@app.route("/adjust_threshold", methods=["POST"])
+def adjust_threshold():
+    action = request.form.get("type")
+
+    if action == "delta_increase":
+        set_delta_threshold(get_delta_threshold() + 0.005)
+    elif action == "delta_decrease":
+        set_delta_threshold(max(0.001, get_delta_threshold() - 0.005))
+    elif action == "raise_increase":
+        set_min_normalized_raise(get_min_normalized_raise() + 0.005)
+    elif action == "raise_decrease":
+        set_min_normalized_raise(max(0.001, get_min_normalized_raise() - 0.005))
+
+    return redirect(url_for('dashboard'))
 
 @app.route("/video_feed")
 def video_feed():

@@ -21,11 +21,6 @@
 </head>
 <body>
 
-    <!-- Optional: if you want to show status and live feed later -->
-    <!-- <h1>{{ status }}</h1>
-    <img src="/video_feed" width="480" />
-    <br> -->
-
     <!-- Navigation Buttons -->
     <a href="/controller" class="button-link">Controller Setup</a>
     <a href="/controller_status_page" class="button-link">🎮 Live Controller View</a>
@@ -39,17 +34,50 @@
 
     <br>
 
-    <!-- New Play Button -->
+    <!-- Play Button -->
     <form action="/start_play" method="post">
         <button type="submit" style="background-color: #1e90ff; color: white;">▶️ Play</button>
     </form>
 
     <br>
 
-    <!-- Moved Shutdown Button BELOW all -->
+    <!-- Shutdown Button -->
     <form action="/shutdown" method="post">
         <button type="submit" style="background-color: #ff4d4d; color: white;">🔴 Shut Down</button>
     </form>
+
+    <br><br>
+
+    <!-- Threshold Adjustments -->
+    <h2>⚡ Threshold Settings</h2>
+
+    <form action="/adjust_threshold" method="post" style="display:inline;">
+        <input type="hidden" name="type" value="delta_increase">
+        <button type="submit">➕ Increase Δ Threshold</button>
+    </form>
+
+    <form action="/adjust_threshold" method="post" style="display:inline;">
+        <input type="hidden" name="type" value="delta_decrease">
+        <button type="submit">➖ Decrease Δ Threshold</button>
+    </form>
+
+    <br><br>
+
+    <form action="/adjust_threshold" method="post" style="display:inline;">
+        <input type="hidden" name="type" value="raise_increase">
+        <button type="submit">⬆️ Increase Raise Minimum</button>
+    </form>
+
+    <form action="/adjust_threshold" method="post" style="display:inline;">
+        <input type="hidden" name="type" value="raise_decrease">
+        <button type="submit">⬇️ Decrease Raise Minimum</button>
+    </form>
+
+    <br><br>
+
+    <!-- Display Current Thresholds -->
+    <h3>Current Δ Threshold: {{ current_delta }}</h3>
+    <h3>Current Raise Minimum: {{ current_raise }}</h3>
 
 </body>
 </html>
