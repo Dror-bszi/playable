@@ -26,34 +26,34 @@ class GestureDetector:
         return success
 
     def is_elbow_raised_forward(self, frame, threshold=0.10):
-    """
-    Fast detection: Is the left elbow raised forward compared to right shoulder.
-    Normalized by shoulder-to-shoulder distance.
-    """
-    if frame is None:
-        return False
+        """
+        Fast detection: Is the left elbow raised forward compared to right shoulder.
+        Normalized by shoulder-to-shoulder distance.
+        """
+        if frame is None:
+            return False
 
-    rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-    pose_results = self.pose.process(rgb)
+        rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        pose_results = self.pose.process(rgb)
 
-    if not pose_results.pose_landmarks:
-        return False
+        if not pose_results.pose_landmarks:
+            return False
 
-    landmarks = pose_results.pose_landmarks.landmark
-    try:
-        shoulder_right = landmarks[mp.solutions.pose.PoseLandmark.RIGHT_SHOULDER]
-        shoulder_left = landmarks[mp.solutions.pose.PoseLandmark.LEFT_SHOULDER]
-        elbow_left = landmarks[mp.solutions.pose.PoseLandmark.LEFT_ELBOW]
+        landmarks = pose_results.pose_landmarks.landmark
+        try:
+            shoulder_right = landmarks[mp.solutions.pose.PoseLandmark.RIGHT_SHOULDER]
+            shoulder_left = landmarks[mp.solutions.pose.PoseLandmark.LEFT_SHOULDER]
+            elbow_left = landmarks[mp.solutions.pose.PoseLandmark.LEFT_ELBOW]
 
-        shoulder_distance = abs(shoulder_right.x - shoulder_left.x)
+            shoulder_distance = abs(shoulder_right.x - shoulder_left.x)
 
-        if shoulder_distance < 1e-5:
-            return False  # Avoid division by near-zero
+            if shoulder_distance < 1e-5:
+                return False  # Avoid division by near-zero
 
-        normalized_raise = (shoulder_right.y - elbow_left.y) / shoulder_distance
+            normalized_raise = (shoulder_right.y - elbow_left.y) / shoulder_distance
 
-        return normalized_raise >= threshold
+            return normalized_raise >= threshold
 
-    except (AttributeError, IndexError):
-        # In case landmarks missing or wrong
-        return False
+        except (AttributeError, IndexError):
+            # In case landmarks missing or wrong
+            return False
