@@ -14,12 +14,16 @@ from ui.controller_live_status import start_controller_monitor, get_status
 app = Flask(__name__)
 
 # ─── Global Variables ───────────────────────────────────────
-camera_index = 0  # Default fallback
+camera_index = 0
 status = "Waiting..."
 shutdown_flag = False
 devices = []
 connected_device = None
 gesture_mappings = {}
+
+# Shared frame for Web UI
+shared_frame = None
+frame_lock = threading.Lock()
 
 # ─── Setter Functions ───────────────────────────────────────
 def set_camera_index(index):
@@ -32,6 +36,11 @@ def set_web_status(message):
 
 def should_shutdown():
     return shutdown_flag
+
+def set_shared_frame(frame):
+    global shared_frame
+    with frame_lock:
+        shared_frame = frame.copy()
 
 # ─── Logging Configuration ──────────────────────────────────
 log_dir = "logs"
@@ -64,16 +73,16 @@ def dashboard():
 @app.route("/video_feed")
 def video_feed():
     def generate():
-        cap = cv2.VideoCapture(camera_index)
+        global shared_frame
         while True:
-            success, frame = cap.read()
-            if not success:
-                break
-            ret, buffer = cv2.imencode('.jpg', frame)
-            frame = buffer.tobytes()
+            with frame_lock:
+                if shared_frame is None:
+                    continue
+                ret, buffer = cv2.imencode('.jpg', shared_frame)
+                frame = buffer.tobytes()
+
             yield (b'--frame\r\n'
                    b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
-        cap.release()
     return Response(generate(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 @app.route("/controller")
@@ -91,6 +100,7 @@ def controller_status_data():
 @app.route("/controller_mapping")
 def mapping():
     return render_template("mapping.html", gesture_mappings=gesture_mappings)
+
 @app.route("/save_mapping", methods=["POST"])
 def save_mapping():
     global gesture_mappings

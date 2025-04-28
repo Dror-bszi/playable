@@ -6,31 +6,47 @@ import threading
 
 from core.gestures import GestureDetector, default_gestures
 from remote.output_bridge import press_button
-from web.server import run_server, set_web_status, should_shutdown, gesture_mappings, set_camera_index
+from web.server import run_server, set_web_status, should_shutdown, gesture_mappings, set_camera_index, set_shared_frame
 
 # --- Permissions Check ---
 if os.geteuid() != 0:
     print("❌ ERROR: This script must be run with sudo -E python3 main.py")
     sys.exit(1)
 
+# --- Globals ---
+frame_lock = threading.Lock()
+current_frame = None
+cap = None
+
 # --- Initialize Camera ---
 def find_working_camera():
-    for i in range(3):
-        cap = cv2.VideoCapture(i)
-        if cap.isOpened():
-            print(f"[INFO] Found working camera at index {i} (/dev/video{i})")
-            return cap, i
-        cap.release()
-    print("❌ ERROR: No working camera found.")
-    return None, None
+    cap = cv2.VideoCapture(0)
+    if not cap.isOpened():
+        print("❌ ERROR: No working camera found.")
+        return None, None
 
-cap, camera_index = find_working_camera()
-set_camera_index(camera_index)
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
 
-# --- Start Web Server ---
-threading.Thread(target=run_server, daemon=True).start()
+    actual_width = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
+    actual_height = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
+    print(f"[INFO] Camera opened at resolution: {int(actual_width)}x{int(actual_height)}")
 
-# --- Gesture Detection Loop ---
+    return cap, 0
+
+# --- Camera Worker (for Web GUI) ---
+def camera_worker():
+    global cap
+    while not should_shutdown():
+        if cap is not None:
+            ret, frame = cap.read()
+            if ret:
+                with frame_lock:
+                    set_shared_frame(frame.copy())  # only for Web
+        else:
+            time.sleep(1)
+
+# --- Gesture Detection Loop (Real-Time) ---
 def gesture_detection_loop():
     global cap
     if cap is None:
@@ -60,7 +76,6 @@ def gesture_detection_loop():
 
     set_web_status("Calibration complete! Start gesture detection")
 
-    # Track which gestures are active
     gesture_active = {gesture: False for gesture in default_gestures}
 
     while not should_shutdown():
@@ -74,7 +89,6 @@ def gesture_detection_loop():
             if gesture_name is None:
                 continue
 
-            # Detect gesture
             is_detected = False
             if gesture_name == "left_elbow_raised_forward":
                 is_detected = detector.is_left_elbow_raised_forward(frame)
@@ -95,16 +109,25 @@ def gesture_detection_loop():
                 gesture_active[gesture_name] = False
                 set_web_status("Waiting for gesture...")
 
-    cap.release()
-    cv2.destroyAllWindows()
-
-# --- Start Gesture Detection Thread ---
-threading.Thread(target=gesture_detection_loop, daemon=True).start()
-
-# --- Main Blocking Loop ---
+# --- Main ---
 if __name__ == "__main__":
+    cap, camera_index = find_working_camera()
+    set_camera_index(camera_index)
+
+    # Start camera capture thread (only for Web UI)
+    threading.Thread(target=camera_worker, daemon=True).start()
+
+    # Start Web server
+    threading.Thread(target=run_server, daemon=True).start()
+
+    # Start Gesture Detection (main)
+    threading.Thread(target=gesture_detection_loop, daemon=True).start()
+
     try:
         while True:
             time.sleep(1)
     except KeyboardInterrupt:
         print("\n[INFO] PlayAble shutting down...")
+        if cap is not None:
+            cap.release()
+        cv2.destroyAllWindows()
