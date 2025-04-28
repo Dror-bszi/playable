@@ -34,6 +34,15 @@ frame_lock = threading.Lock()
 # Thresholds for live tuning
 delta_threshold = 0.05
 min_normalized_raise = 0.05
+# Live elbow value tracking
+current_elbow_raise = 0.0
+
+def update_current_elbow_raise(value):
+    global current_elbow_raise
+    current_elbow_raise = value
+
+def get_current_elbow_raise():
+    return current_elbow_raise
 
 def get_delta_threshold():
     return delta_threshold

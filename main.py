@@ -49,15 +49,6 @@ def camera_worker():
 # Adjustable global thresholds
 delta_threshold = 0.05  # How fast elbow must raise (movement)
 min_normalized_raise = 0.05  # How much elbow must already be lifted
-# --- Current Elbow Raise Value (Live) ---
-current_elbow_raise = 0.0
-
-def set_current_elbow_raise(value):
-    global current_elbow_raise
-    current_elbow_raise = value
-
-def get_current_elbow_raise():
-    return current_elbow_raise
 
 def set_delta_threshold(value):
     global delta_threshold
