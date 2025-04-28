@@ -73,7 +73,7 @@ def gesture_detection_loop():
         # Detect gesture
         is_detected = False
         gesture_name = "left_elbow_raised_forward"
-        is_detected = detector.is_left_elbow_raised_forward(frame)
+        is_detected = detector.is_elbow_raised_forward(frame)
         # elif gesture_name == "mouth_open":
         #     is_detected = detector.is_mouth_open(frame)
         # elif gesture_name == "head_tilt_right":
