@@ -17,6 +17,7 @@ if os.geteuid() != 0:
 frame_lock = threading.Lock()
 current_frame = None
 cap = None
+raise_threshold = 0.10  # 🔥 Live adjustable threshold!
 
 # --- Initialize Camera ---
 def find_working_camera():
@@ -48,7 +49,7 @@ def camera_worker():
 
 # --- Gesture Detection Loop (Real-Time) ---
 def gesture_detection_loop():
-    global cap
+    global cap, raise_threshold
     if cap is None:
         set_web_status("❌ No camera available. Running in UI-only mode.")
         while not should_shutdown():
@@ -93,7 +94,6 @@ def gesture_detection_loop():
         return
 
     print("[INFO] Calibration complete. Starting gesture detection...")
-
     set_web_status("Calibration complete! Start gesture detection")
 
     gesture_active = {gesture: False for gesture in default_gestures}
@@ -105,29 +105,58 @@ def gesture_detection_loop():
             time.sleep(0.5)
             continue
 
-        # for button_name, gesture_name in gesture_mappings.items():
-        #     if gesture_name is None:
-        #         continue
-
-            # is_detected = False
         gesture_name = "left_elbow_raised_forward"
-        is_detected = detector.is_elbow_raised_forward(frame)
-            # elif gesture_name == "mouth_open":
-            #     is_detected = detector.is_mouth_open(frame)
-            # elif gesture_name == "head_tilt_right":
-            #     is_detected = detector.is_head_tilt_right(frame)
-            # elif gesture_name == "right_elbow_raised_forward":
-            #     is_detected = detector.is_right_elbow_raised_forward(frame)
+        is_detected, normalized_value = detector.is_elbow_raised_forward(frame, threshold=raise_threshold, debug=True)
 
+        # --- DEBUG PRINTING ---
+        print(f"[DEBUG] Left Elbow Normalized Raise = {normalized_value:.3f} | Threshold = {raise_threshold:.3f} | Detected = {is_detected}")
+
+        # --- DEBUG DRAWING ---
+        cv2.putText(
+            frame,
+            f"Raise: {normalized_value:.3f}",
+            (30, 30),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            1,
+            (0, 255, 0) if is_detected else (0, 0, 255),
+            2
+        )
+        cv2.putText(
+            frame,
+            f"Threshold: {raise_threshold:.3f}",
+            (30, 70),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            1,
+            (255, 255, 0),
+            2
+        )
+
+        cv2.imshow("Elbow Raise Debug", frame)
+
+        key = cv2.waitKey(1) & 0xFF
+
+        if key == ord('q'):
+            print("[INFO] Quit debug window requested.")
+            break
+        elif key == ord('w'):
+            raise_threshold += 0.01
+            print(f"[THRESHOLD] Increased to {raise_threshold:.3f}")
+        elif key == ord('s'):
+            raise_threshold = max(0.01, raise_threshold - 0.01)
+            print(f"[THRESHOLD] Decreased to {raise_threshold:.3f}")
+
+        # --- Gesture Activation Logic ---
         if is_detected and not gesture_active.get(gesture_name, False):
-            print(f"[GESTURE] {gesture_name} detected! Pressing {button_name}")
-            set_web_status(f"Pressed: {button_name.upper()}")
-            press_button(button_name)
+            print(f"[GESTURE] {gesture_name} detected! Pressing {gesture_name}")
+            set_web_status(f"Pressed: {gesture_name.upper()}")
+            press_button(gesture_name)
             gesture_active[gesture_name] = True
 
         elif not is_detected and gesture_active.get(gesture_name, False):
             gesture_active[gesture_name] = False
             set_web_status("Waiting for gesture...")
+
+    cv2.destroyAllWindows()
 
 # --- Main ---
 if __name__ == "__main__":
