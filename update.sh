@@ -7,6 +7,6 @@ cd "$(dirname "$0")"
 git reset --hard
 
 # Pull the latest changes
-git pull origin dror elbow try
+git pull origin dror-elbow-try
 
 echo "✅ Update complete!"
