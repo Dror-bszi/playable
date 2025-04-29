@@ -18,15 +18,34 @@ sudo apt install -y \
     libhidapi-hidraw0 \
     libhidapi-libusb0 \
     expect \
-    python3-uinput
+    python3-uinput \
+    pcmanfm
 
 # ─── Python Packages ─────────────────────────────
 pip3 install --break-system-packages --upgrade pip
 pip3 install --break-system-packages -r requirements.txt
-pip3 install --break-system-packages mediapipe  # <-- Force separate install of mediapipe
+pip3 install --break-system-packages mediapipe
 
 # ─── Bluetooth Auto-Pair Setup ───────────────────
 chmod +x "$(dirname "$0")/utils/pair_controller.expect"
+
+# ─── Set PlayAble wallpaper ──────────────────────
+echo "🖼 Setting PlayAble desktop background..."
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+WALLPAPER_PATH="$SCRIPT_DIR/web/static/background.png"
+
+mkdir -p /home/pi/Pictures
+cp "$WALLPAPER_PATH" /home/pi/Pictures/playable-bg.png
+chown pi:pi /home/pi/Pictures/playable-bg.png
+sudo -u pi pcmanfm --set-wallpaper /home/pi/Pictures/playable-bg.png
+
+# ─── Install pi-apps (if not already installed) ──
+if [ ! -d "/home/pi/pi-apps" ]; then
+    echo "📦 Installing pi-apps (Raspberry Pi App Store)..."
+    sudo -u pi bash -c 'wget -qO- https://raw.githubusercontent.com/Botspot/pi-apps/master/install | bash'
+else
+    echo "✔️ pi-apps is already installed."
+fi
 
 # ─── Sudo Permissions for PlayAble Tools ─────────
 USERNAME=$(whoami)
