@@ -6,7 +6,7 @@ import threading
 
 from core.gestures import GestureDetector, default_gestures
 from remote.output_bridge import press_button
-from web.server import run_server, set_web_status, should_shutdown, set_current_elbow_raise, set_camera_index, set_shared_frame, is_play_mode
+from web.server import run_server, set_web_status, should_shutdown, update_current_elbow_raise, set_camera_index, set_shared_frame, is_play_mode
 
 # --- Permissions Check ---
 if os.geteuid() != 0:
