@@ -112,7 +112,7 @@ def gesture_detection_loop():
 
         gesture_name = "left_elbow_raised_forward"
         is_detected = detector.is_elbow_raised_forward(frame)
-        button_name = "circle"
+        button_name = "square"
 
         if is_detected and not gesture_active.get(gesture_name, False):
             print(f"[GESTURE] {gesture_name} detected! Pressing {button_name}")
