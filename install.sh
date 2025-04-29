@@ -28,24 +28,44 @@ pip3 install --break-system-packages mediapipe
 # ─── Install Evsieve ──────────────────────────────
 echo "🎛️ Installing evsieve..."
 
-# Required dependencies
-sudo apt install -y cargo libevdev2 libevdev-dev
+# Check if rustup is installed; if not, remove system cargo/rustc and install rustup
+if ! command -v rustup &> /dev/null; then
+    echo "🧹 Removing system Rust toolchain (cargo/rustc)..."
+    sudo apt remove -y cargo rustc || true
 
-# Download and extract evsieve v1.4.0
+    echo "⬇️ Installing official Rust toolchain via rustup..."
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+    source "$HOME/.cargo/env"
+else
+    echo "✔️ rustup already installed"
+    source "$HOME/.cargo/env"
+fi
+
+# Make sure we’re using the latest stable toolchain
+rustup install stable
+rustup default stable
+
+# Install evsieve build dependencies
+sudo apt install -y libevdev2 libevdev-dev
+
+# Download and compile evsieve
 cd /tmp
 wget https://github.com/KarsMulder/evsieve/archive/v1.4.0.tar.gz -O evsieve-1.4.0.tar.gz
 tar -xzf evsieve-1.4.0.tar.gz
 cd evsieve-1.4.0
 
-# Build with Rust
-cargo build --release
-
-# Install the binary to /usr/local/bin
-sudo install -m 755 -t /usr/local/bin target/release/evsieve
+echo "🛠 Building evsieve with cargo..."
+if cargo build --release; then
+    sudo install -m 755 -t /usr/local/bin target/release/evsieve
+    echo "✅ evsieve installed to /usr/local/bin"
+else
+    echo "❌ Failed to build evsieve. You may need to reboot or retry manually."
+fi
 
 # Cleanup
 cd ~
 rm -rf /tmp/evsieve-1.4.0*
+
 
 # ─── Bluetooth Auto-Pair Setup ───────────────────
 chmod +x "$(dirname "$0")/utils/pair_controller.expect"
