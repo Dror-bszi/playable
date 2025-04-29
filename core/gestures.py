@@ -36,7 +36,7 @@ class GestureDetector:
 
     def is_elbow_raised_forward(self, frame, min_interval=0.1):
         """
-        Detect fast left elbow raise based on delta between frames,
+        Detect fast left elbow *side raise* based on X-axis distance between shoulders,
         using global adjustable thresholds.
         """
         if frame is None:
@@ -59,26 +59,27 @@ class GestureDetector:
             if shoulder_distance < 1e-5:
                 return False  # Avoid division by almost zero
 
-            normalized_elbow_y = (shoulder_right.y - elbow_left.y) / shoulder_distance
-            update_current_elbow_raise(normalized_elbow_y)  # 🛠 Update live value!
+            # ⚡ New: normalize based on *x* movement instead of y
+            normalized_elbow_x = (elbow_left.x - shoulder_left.x) / shoulder_distance
+            update_current_elbow_raise(normalized_elbow_x)  # 🛠 Update live elbow value
 
             threshold = get_delta_threshold()
             min_raise = get_min_normalized_raise()
 
             if self.last_elbow_y is not None:
-                delta = normalized_elbow_y - self.last_elbow_y
+                delta = normalized_elbow_x - self.last_elbow_y
                 now = time.time()
 
                 if (
-                    normalized_elbow_y > min_raise and
+                    normalized_elbow_x > min_raise and
                     delta >= threshold and
                     (now - self.last_detection_time) >= min_interval
                 ):
-                    self.last_elbow_y = normalized_elbow_y
+                    self.last_elbow_y = normalized_elbow_x
                     self.last_detection_time = now
                     return True
 
-            self.last_elbow_y = normalized_elbow_y
+            self.last_elbow_y = normalized_elbow_x
 
         except (AttributeError, IndexError):
             return False
