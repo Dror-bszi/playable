@@ -25,6 +25,27 @@ sudo apt install -y \
 pip3 install --break-system-packages --upgrade pip
 pip3 install --break-system-packages -r requirements.txt
 pip3 install --break-system-packages mediapipe
+# ─── Install Evsieve ──────────────────────────────
+echo "🎛️ Installing evsieve..."
+
+# Required dependencies
+sudo apt install -y cargo libevdev2 libevdev-dev
+
+# Download and extract evsieve v1.4.0
+cd /tmp
+wget https://github.com/KarsMulder/evsieve/archive/v1.4.0.tar.gz -O evsieve-1.4.0.tar.gz
+tar -xzf evsieve-1.4.0.tar.gz
+cd evsieve-1.4.0
+
+# Build with Rust
+cargo build --release
+
+# Install the binary to /usr/local/bin
+sudo install -m 755 -t /usr/local/bin target/release/evsieve
+
+# Cleanup
+cd ~
+rm -rf /tmp/evsieve-1.4.0*
 
 # ─── Bluetooth Auto-Pair Setup ───────────────────
 chmod +x "$(dirname "$0")/utils/pair_controller.expect"
