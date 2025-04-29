@@ -1,3 +1,4 @@
+# web/server.py
 from flask import Flask, render_template, request, redirect, url_for, Response, jsonify
 import threading
 import cv2
@@ -24,9 +25,6 @@ gesture_mappings = {}
 # Play Mode Flag
 play_mode = False
 
-def is_play_mode():
-    return play_mode
-
 # Shared frame for Web UI
 shared_frame = None
 frame_lock = threading.Lock()
@@ -34,8 +32,13 @@ frame_lock = threading.Lock()
 # Thresholds for live tuning
 delta_threshold = 0.05
 min_normalized_raise = 0.05
+
 # Live elbow value tracking
 current_elbow_raise = 0.0
+
+# ─── Functions to Get/Set Variables ─────────────────────────
+def is_play_mode():
+    return play_mode
 
 def update_current_elbow_raise(value):
     global current_elbow_raise
@@ -58,7 +61,6 @@ def set_min_normalized_raise(value):
     global min_normalized_raise
     min_normalized_raise = value
 
-# ─── Setter Functions ───────────────────────────────────────
 def set_camera_index(index):
     global camera_index
     camera_index = index
@@ -211,7 +213,6 @@ def start_merge():
         set_web_status(f"❌ Error: {str(e)}")
 
     return redirect(url_for('dashboard'))
-
 
 # ─── Run Server ─────────────────────────────────────────────
 def run_server():

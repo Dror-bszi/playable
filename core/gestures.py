@@ -2,13 +2,12 @@
 import mediapipe as mp
 import cv2
 import time
-from web.server import set_current_elbow_raise  # add import at the top
+from web.server import update_current_elbow_raise  # 🛠 Corrected import!
 
-# --- Import thresholds from main.py (or shared config) ---
+# --- Import thresholds from main.py (or fallback for testing) ---
 try:
     from main import get_delta_threshold, get_min_normalized_raise
 except ImportError:
-    # Fallback if running gestures.py directly (for testing)
     def get_delta_threshold():
         return 0.05
     def get_min_normalized_raise():
@@ -24,11 +23,10 @@ default_gestures = [
 
 class GestureDetector:
     def __init__(self):
-        self.pose = mp.solutions.pose.Pose(model_complexity=0)  # Lightweight pose model for speed
+        self.pose = mp.solutions.pose.Pose(model_complexity=0)  # Lightweight model
         self.face_mesh = mp.solutions.face_mesh.FaceMesh(refine_landmarks=True)
         self.reference_points = {}
 
-        # Fast detection memory
         self.last_elbow_y = None
         self.last_detection_time = time.time()
 
@@ -38,7 +36,7 @@ class GestureDetector:
 
     def is_elbow_raised_forward(self, frame, min_interval=0.1):
         """
-        Fast detection: Detect sudden left elbow raise based on frame-to-frame delta,
+        Detect fast left elbow raise based on delta between frames,
         using global adjustable thresholds.
         """
         if frame is None:
@@ -62,8 +60,8 @@ class GestureDetector:
                 return False  # Avoid division by almost zero
 
             normalized_elbow_y = (shoulder_right.y - elbow_left.y) / shoulder_distance
-            set_current_elbow_raise(normalized_elbow_y)  # Update the current elbow raise value
-            # Update the last elbow Y value for fast detection  
+            update_current_elbow_raise(normalized_elbow_y)  # 🛠 Update live value!
+
             threshold = get_delta_threshold()
             min_raise = get_min_normalized_raise()
 
