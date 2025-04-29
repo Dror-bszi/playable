@@ -72,21 +72,21 @@ chmod +x "$(dirname "$0")/utils/pair_controller.expect"
 
 # ─── Set PlayAble wallpaper ──────────────────────
 echo "🖼 Setting PlayAble desktop background..."
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WALLPAPER_PATH="$SCRIPT_DIR/web/static/background.png"
 
-mkdir -p /home/pi/Pictures
-cp "$WALLPAPER_PATH" /home/pi/Pictures/playable-bg.png
-chown pi:pi /home/pi/Pictures/playable-bg.png
-sudo -u pi pcmanfm --set-wallpaper /home/pi/Pictures/playable-bg.png
+mkdir -p /home/$USERNAME/Pictures
+cp "$WALLPAPER_PATH" /home/$USERNAME/Pictures/playable-bg.png
+chown $USERNAME:$USERNAME /home/$USERNAME/Pictures/playable-bg.png
 
-# ─── Install pi-apps (if not already installed) ──
-if [ ! -d "/home/pi/pi-apps" ]; then
-    echo "📦 Installing pi-apps (Raspberry Pi App Store)..."
-    sudo -u pi bash -c 'wget -qO- https://raw.githubusercontent.com/Botspot/pi-apps/master/install | bash'
+# Try to set wallpaper if pcmanfm and a GUI session exist
+if command -v pcmanfm &>/dev/null; then
+    DISPLAY=:0 sudo -u $USERNAME pcmanfm --set-wallpaper /home/$USERNAME/Pictures/playable-bg.png || echo "⚠️ Failed to set wallpaper"
 else
-    echo "✔️ pi-apps is already installed."
+    echo "⚠️ pcmanfm not found, skipping wallpaper setup"
 fi
+
 
 # ─── Sudo Permissions for PlayAble Tools ─────────
 USERNAME=$(whoami)
