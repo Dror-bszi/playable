@@ -1,6 +1,7 @@
 #!/bin/bash
 
 set -e
+USERNAME=$(whoami)
 
 echo "🔧 Setting up PlayAble environment..."
 
@@ -25,6 +26,7 @@ sudo apt install -y \
 pip3 install --break-system-packages --upgrade pip
 pip3 install --break-system-packages -r requirements.txt
 pip3 install --break-system-packages mediapipe
+
 # ─── Install Evsieve ──────────────────────────────
 echo "🎛️ Installing evsieve..."
 
@@ -66,7 +68,6 @@ fi
 cd ~
 rm -rf /tmp/evsieve-1.4.0*
 
-
 # ─── Bluetooth Auto-Pair Setup ───────────────────
 chmod +x "$(dirname "$0")/utils/pair_controller.expect"
 
@@ -87,9 +88,13 @@ else
     echo "⚠️ pcmanfm not found, skipping wallpaper setup"
 fi
 
+# ─── Install pi-apps (optional) ──────────────────
+if [ "$USERNAME" == "pi" ] && [ ! -d "/home/pi/pi-apps" ]; then
+    echo "📦 Installing pi-apps (Raspberry Pi App Store)..."
+    sudo -u pi bash -c 'wget -qO- https://raw.githubusercontent.com/Botspot/pi-apps/master/install | bash'
+fi
 
 # ─── Sudo Permissions for PlayAble Tools ─────────
-USERNAME=$(whoami)
 declare -a CMDS=("evtest" "bluetoothctl" "hcitool" "rfkill" "iw")
 
 echo "🔐 Configuring sudoers (no password) for: ${CMDS[*]}"
@@ -109,6 +114,7 @@ for CMD in "${CMDS[@]}"; do
 done
 
 # ─── Completion ───────────────────────────────────
+echo ""
 echo "✅ Installation complete!"
-echo "To run PlayAble:"
-echo "  python3 main.py"
+echo "👉 To run PlayAble:"
+echo "   python3 main.py"
