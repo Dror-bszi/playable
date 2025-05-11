@@ -10,6 +10,7 @@ sudo apt update
 sudo apt install -y \
     python3 \
     python3-pip \
+    python3-dev \
     libatlas-base-dev \
     libjpeg-dev \
     libgl1 \
@@ -18,9 +19,16 @@ sudo apt install -y \
     bluez-tools \
     libhidapi-hidraw0 \
     libhidapi-libusb0 \
+    libusb-1.0-0-dev \
+    libudev-dev \
     expect \
     python3-uinput \
-    pcmanfm
+    pcmanfm \
+    imx500-all \
+    python3-opencv \
+    python3-munkres \
+    hostapd \
+    dnsmasq
 
 # ─── Python Packages ─────────────────────────────
 pip3 install --break-system-packages --upgrade pip
@@ -43,7 +51,7 @@ else
     source "$HOME/.cargo/env"
 fi
 
-# Make sure we’re using the latest stable toolchain
+# Make sure we're using the latest stable toolchain
 rustup install stable
 rustup default stable
 
@@ -62,31 +70,21 @@ if cargo build --release; then
     echo "✅ evsieve installed to /usr/local/bin"
 else
     echo "❌ Failed to build evsieve. You may need to reboot or retry manually."
+    exit 1
 fi
 
 # Cleanup
 cd ~
 rm -rf /tmp/evsieve-1.4.0*
 
+# ─── AI Camera Setup ─────────────────────────────
+echo "📸 Setting up AI camera..."
+
+# Add user to video group
+sudo usermod -a -G video $USERNAME
+
 # ─── Bluetooth Auto-Pair Setup ───────────────────
 chmod +x "$(dirname "$0")/utils/pair_controller.expect"
-
-# ─── Set PlayAble wallpaper ──────────────────────
-echo "🖼 Setting PlayAble desktop background..."
-
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-WALLPAPER_PATH="$SCRIPT_DIR/web/static/background.png"
-
-mkdir -p /home/$USERNAME/Pictures
-cp "$WALLPAPER_PATH" /home/$USERNAME/Pictures/playable-bg.png
-chown $USERNAME:$USERNAME /home/$USERNAME/Pictures/playable-bg.png
-
-# Try to set wallpaper if pcmanfm and a GUI session exist
-if command -v pcmanfm &>/dev/null; then
-    DISPLAY=:0 sudo -u $USERNAME pcmanfm --set-wallpaper /home/$USERNAME/Pictures/playable-bg.png || echo "⚠️ Failed to set wallpaper"
-else
-    echo "⚠️ pcmanfm not found, skipping wallpaper setup"
-fi
 
 # ─── Install pi-apps (optional) ──────────────────
 if [ "$USERNAME" == "pi" ] && [ ! -d "/home/pi/pi-apps" ]; then
@@ -113,8 +111,51 @@ for CMD in "${CMDS[@]}"; do
     fi
 done
 
+# ─── Install Services ───────────────────────────
+echo "📦 Installing system services..."
+
+# Make wifi fallback script executable
+chmod +x "$(dirname "$0")/utils/wifi_fallback.sh"
+
+# Install and enable services independently
+sudo cp playable.service /etc/systemd/system/
+sudo cp wifi-fallback.service /etc/systemd/system/
+sudo systemctl daemon-reload
+
+# Enable services (they will start on next boot)
+sudo systemctl enable playable.service
+sudo systemctl enable wifi-fallback.service
+
+# ─── Verify Installation ─────────────────────────
+echo "🔍 Verifying installation..."
+
+# Check Python packages
+echo "Checking Python packages..."
+python3 -c "import cv2, mediapipe, flask, hidapi, evdev, numpy" 2>/dev/null || {
+    echo "❌ Some Python packages are missing. Please run: pip3 install -r requirements.txt"
+    exit 1
+}
+
+# Check camera access
+echo "Checking camera access..."
+if ! python3 -c "import cv2; cap = cv2.VideoCapture(0); print('Camera available' if cap.isOpened() else 'No camera found'); cap.release()" | grep -q "Camera available"; then
+    echo "❌ No camera detected. Please check your camera connection."
+    exit 1
+fi
+
+# Check evsieve installation
+if ! command -v evsieve &> /dev/null; then
+    echo "❌ evsieve not found in PATH"
+    exit 1
+fi
+
 # ─── Completion ───────────────────────────────────
 echo ""
 echo "✅ Installation complete!"
-echo "👉 To run PlayAble:"
-echo "   python3 main.py"
+echo "👉 PlayAble will start automatically on boot"
+echo "👉 WiFi fallback will be available when no internet connection is detected"
+echo "   SSID: PlayAble_AP"
+echo "   Password: playable123"
+echo ""
+echo "⚠️ Note: You may need to reboot for all changes to take effect."
+echo "   sudo reboot"

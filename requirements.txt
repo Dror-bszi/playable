@@ -1,6 +1,8 @@
 # requirements.txt
-flask
-opencv-python
-mediapipe
-hidapi
-evdev
+flask>=2.0.0
+opencv-python>=4.5.0
+mediapipe>=0.8.0
+hidapi>=0.10.0
+evdev>=1.4.0
+numpy>=1.19.0
+python-uinput>=0.11.2
