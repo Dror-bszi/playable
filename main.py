@@ -26,7 +26,7 @@ def find_working_camera():
     global picam2
     try:
         picam2 = Picamera2()
-        picam2.preview_configuration.main.size = (1280, 720)
+        picam2.preview_configuration.main.size = (640, 480)
         picam2.preview_configuration.main.format = "RGB888"
         picam2.configure("preview")
         picam2.start()
@@ -37,15 +37,16 @@ def find_working_camera():
         return None
 
 # --- Camera Worker (for Web GUI) ---
-def camera_worker():
-    while not should_shutdown():
-        try:
-            frame = cv2.cvtColor(picam2.capture_array(), cv2.COLOR_RGB2BGR)
-            with frame_lock:
-                set_shared_frame(frame.copy())
-        except Exception as e:
-            print(f"[WARN] Failed to capture frame in camera_worker: {e}")
-            time.sleep(0.1)
+# def camera_worker():
+#     while not should_shutdown():
+#         try:
+#             frame = cv2.cvtColor(picam2.capture_array(), cv2.COLOR_RGB2BGR)
+#             with frame_lock:
+#                 set_shared_frame(frame.copy())
+#                 time.sleep(0.03)
+#         except Exception as e:
+#             print(f"[WARN] Failed to capture frame in camera_worker: {e}")
+#             time.sleep(0.1)
 
 # Adjustable global thresholds
 delta_threshold = 0.05
@@ -113,7 +114,8 @@ def gesture_detection_loop():
 
         if frame is None:
             continue
-
+        set_shared_frame(cv2.cvtColor(frame, cv2.COLOR_RGB2BGR))
+        
         gesture_name = "left_elbow_raised_forward"
         is_detected = detector.is_elbow_raised_forward(frame)
         button_name = "square"
@@ -138,7 +140,7 @@ if __name__ == "__main__":
     threading.Thread(target=gesture_detection_loop, daemon=True).start()
 
     # Optionally enable camera worker (for video stream)
-    threading.Thread(target=camera_worker, daemon=True).start()
+    # threading.Thread(target=camera_worker, daemon=True).start()
 
     try:
         while True:
