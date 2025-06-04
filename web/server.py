@@ -138,12 +138,14 @@ def video_feed():
     while True:
         with frame_lock:
             if shared_frame is None:
+                print("[STREAM] shared_frame is None")
                 continue
             success, buffer = cv2.imencode('.jpg', shared_frame)
             if not success:
+                print("[STREAM] Frame encoding failed")
                 continue
             frame = buffer.tobytes()
-
+        print("[STREAM] Yielding frame to client")
         yield (b'--frame\r\n'
             b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
 
