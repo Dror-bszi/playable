@@ -140,7 +140,7 @@ def video_feed():
             with frame_lock:
                 if shared_frame is None:
                     continue
-                ret, buffer = cv2.imencode('.jpg', shared_frame)
+                buffer = cv2.imencode('.jpg', shared_frame)
                 frame = buffer.tobytes()
 
             yield (b'--frame\r\n'
