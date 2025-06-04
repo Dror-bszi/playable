@@ -2,7 +2,7 @@ import os
 import sys
 import time
 import threading
-
+import cv2
 # --- NEW CAMERA (Picamera2) ---
 from picamera2 import Picamera2
 import numpy as np
@@ -40,7 +40,7 @@ def find_working_camera():
 def camera_worker():
     while not should_shutdown():
         try:
-            frame = picam2.capture_array()
+            frame = cv2.cvtColor(picam2.capture_array(), cv2.COLOR_RGB2BGR)
             with frame_lock:
                 set_shared_frame(frame.copy())
         except Exception as e:

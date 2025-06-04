@@ -133,19 +133,24 @@ def adjust_threshold():
     return redirect(url_for('dashboard'))
 
 @app.route("/video_feed")
-def video_feed():    
-    global shared_frame
-    while True:
-        with frame_lock:
-            if shared_frame is None:
-                continue
-            success, buffer = cv2.imencode('.jpg', shared_frame)
-            if not success:
-                continue
-            frame = buffer.tobytes()
-        yield (b'--frame\r\n'
-            b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+def video_feed():
+    def generate():
+        global shared_frame
+        while True:
+            with frame_lock:
+                if shared_frame is None:
+                    time.sleep(0.1)
+                    continue
+                success, buffer = cv2.imencode('.jpg', shared_frame)
+                if not success:
+                    print("[ERROR] Failed to encode frame")
+                    continue
+                frame = buffer.tobytes()
 
+            yield (b'--frame\r\n'
+                   b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+
+    return Response(generate(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 @app.route("/controller")
 def controller():
