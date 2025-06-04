@@ -138,7 +138,7 @@ if __name__ == "__main__":
     threading.Thread(target=gesture_detection_loop, daemon=True).start()
 
     # Optionally enable camera worker (for video stream)
-    # threading.Thread(target=camera_worker, daemon=True).start()
+    threading.Thread(target=camera_worker, daemon=True).start()
 
     try:
         while True:
