@@ -139,12 +139,17 @@ def video_feed():
         while True:
             with frame_lock:
                 if shared_frame is None:
+                    time.sleep(0.1)
                     continue
-                ret, buffer = cv2.imencode('.jpg', shared_frame)
+                success, buffer = cv2.imencode('.jpg', shared_frame)
+                if not success:
+                    print("[ERROR] Failed to encode frame")
+                    continue
                 frame = buffer.tobytes()
 
             yield (b'--frame\r\n'
                    b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+            time.sleep(0.1)  # Adjust frame rate as needed
     return Response(generate(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 @app.route("/controller")

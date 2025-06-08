@@ -1,8 +1,11 @@
 import os
 import sys
 import time
-import cv2
 import threading
+import cv2
+# --- NEW CAMERA (Picamera2) ---
+from picamera2 import Picamera2
+import numpy as np
 
 from core.gestures import GestureDetector, default_gestures
 from remote.output_bridge import press_button
@@ -16,39 +19,38 @@ if os.geteuid() != 0:
 # --- Globals ---
 frame_lock = threading.Lock()
 current_frame = None
-cap = None
+picam2 = None
 
 # --- Initialize Camera ---
 def find_working_camera():
-    cap = cv2.VideoCapture(0)
-    if not cap.isOpened():
-        print("❌ ERROR: No working camera found.")
-        return None, None
-
-    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
-    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
-
-    actual_width = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
-    actual_height = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
-    print(f"[INFO] Camera opened at resolution: {int(actual_width)}x{int(actual_height)}")
-
-    return cap, 0
+    global picam2
+    try:
+        picam2 = Picamera2()
+        picam2.preview_configuration.main.size = (640, 480)
+        picam2.preview_configuration.main.format = "RGB888"
+        picam2.configure("preview")
+        picam2.start()
+        print("[INFO] AI Camera initialized via Picamera2.")
+        return 0  # camera index is irrelevant now
+    except Exception as e:
+        print(f"❌ ERROR: Failed to initialize Picamera2: {e}")
+        return None
 
 # --- Camera Worker (for Web GUI) ---
-def camera_worker():
-    global cap
-    while not should_shutdown():
-        if cap is not None:
-            ret, frame = cap.read()
-            if ret:
-                with frame_lock:
-                    set_shared_frame(frame.copy())  # only for Web
-        else:
-            time.sleep(1)
+# def camera_worker():
+#     while not should_shutdown():
+#         try:
+#             frame = cv2.cvtColor(picam2.capture_array(), cv2.COLOR_RGB2BGR)
+#             with frame_lock:
+#                 set_shared_frame(frame.copy())
+#                 time.sleep(0.03)
+#         except Exception as e:
+#             print(f"[WARN] Failed to capture frame in camera_worker: {e}")
+#             time.sleep(0.1)
 
 # Adjustable global thresholds
-delta_threshold = 0.05  # How fast elbow must raise (movement)
-min_normalized_raise = 0.05  # How much elbow must already be lifted
+delta_threshold = 0.05
+min_normalized_raise = 0.05
 
 def set_delta_threshold(value):
     global delta_threshold
@@ -64,17 +66,15 @@ def set_min_normalized_raise(value):
 def get_min_normalized_raise():
     return min_normalized_raise
 
-
 # --- Gesture Detection Loop (Real-Time) ---
-
 def gesture_detection_loop():
     try:
         os.nice(-10)
         print("[INFO] Gesture Detection Thread priority increased (nice -10).")
     except Exception as e:
         print(f"[WARN] Failed to set nice priority: {e}")
-    global cap
-    if cap is None:
+
+    if picam2 is None:
         set_web_status("❌ No camera available. Running in UI-only mode.")
         while not should_shutdown():
             time.sleep(1)
@@ -87,11 +87,12 @@ def gesture_detection_loop():
     print("[INFO] Waiting for camera to become ready...")
     ready = False
     retries = 0
-    while not ready and retries < 30 and not should_shutdown():  # wait up to ~3 seconds
-        ret, frame = cap.read()
-        if ret and frame is not None:
-            ready = True
-        else:
+    while not ready and retries < 30 and not should_shutdown():
+        try:
+            frame = picam2.capture_array()
+            if frame is not None:
+                ready = True
+        except Exception:
             retries += 1
             time.sleep(0.1)
 
@@ -104,12 +105,17 @@ def gesture_detection_loop():
     gesture_active = {gesture: False for gesture in default_gestures}
 
     while not should_shutdown():
-        ret, frame = cap.read()
-        if not ret or frame is None:
-            print("[WARN] Failed to read frame.")
+        try:
+            frame = picam2.capture_array()
+        except Exception as e:
+            print(f"[WARN] Failed to read frame: {e}")
             time.sleep(0.01)
             continue
 
+        if frame is None:
+            continue
+        set_shared_frame(cv2.cvtColor(frame, cv2.COLOR_RGB2BGR))
+        
         gesture_name = "left_elbow_raised_forward"
         is_detected = detector.is_elbow_raised_forward(frame)
         button_name = "square"
@@ -124,25 +130,22 @@ def gesture_detection_loop():
 
 # --- Main ---
 if __name__ == "__main__":
-    cap, camera_index = find_working_camera()
+    camera_index = find_working_camera()
     set_camera_index(camera_index)
 
-        # Start Web server first
+    # Start Web server
     threading.Thread(target=run_server, daemon=True).start()
 
-    # Always start Gesture Detection (needed in both modes)
+    # Start gesture detection
     threading.Thread(target=gesture_detection_loop, daemon=True).start()
 
-    # Start extra threads only if not in Play Mode
-    
-    #threading.Thread(target=camera_worker, daemon=True).start()
-        # (In future: also start other non-critical threads here)
+    # Optionally enable camera worker (for video stream)
+    # threading.Thread(target=camera_worker, daemon=True).start()
 
     try:
         while True:
             time.sleep(1)
     except KeyboardInterrupt:
         print("\n[INFO] PlayAble shutting down...")
-        if cap is not None:
-            cap.release()
-        cv2.destroyAllWindows()
+        if picam2 is not None:
+            picam2.stop()

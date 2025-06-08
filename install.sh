@@ -13,7 +13,6 @@ sudo apt install -y \
     python3-dev \
     libatlas-base-dev \
     libjpeg-dev \
-    libgl1 \
     bluetooth \
     bluez \
     bluez-tools \
@@ -28,7 +27,11 @@ sudo apt install -y \
     python3-opencv \
     python3-munkres \
     hostapd \
-    dnsmasq
+    dnsmasq \
+    python3-picamera2 \
+    libcamera-apps \
+    python3-kms++ \
+    python3-libcamera
 
 # ─── Python Packages ─────────────────────────────
 pip3 install --break-system-packages --upgrade pip
