@@ -120,17 +120,26 @@ def dashboard():
 @app.route("/adjust_threshold", methods=["POST"])
 def adjust_threshold():
     action = request.form.get("type")
+    updated = False
 
     if action == "delta_increase":
         set_delta_threshold(get_delta_threshold() + 0.005)
+        updated = True
     elif action == "delta_decrease":
         set_delta_threshold(max(0.001, get_delta_threshold() - 0.005))
+        updated = True
     elif action == "raise_increase":
         set_min_normalized_raise(get_min_normalized_raise() + 0.005)
+        updated = True
     elif action == "raise_decrease":
         set_min_normalized_raise(max(0.001, get_min_normalized_raise() - 0.005))
+        updated = True
 
-    return redirect(url_for('dashboard'))
+    return jsonify({
+        "success": updated,
+        "new_delta": get_delta_threshold(),
+        "new_raise": get_min_normalized_raise()
+    })
 
 @app.route("/video_feed")
 def video_feed():
