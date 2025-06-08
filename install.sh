@@ -23,15 +23,12 @@ sudo apt install -y \
     expect \
     python3-uinput \
     pcmanfm \
-    imx500-all \
-    python3-opencv \
-    python3-munkres \
-    hostapd \
-    dnsmasq \
     python3-picamera2 \
     libcamera-apps \
     python3-kms++ \
-    python3-libcamera
+    python3-libcamera \
+    hostapd \
+    dnsmasq
 
 # ─── Python Packages ─────────────────────────────
 pip3 install --break-system-packages --upgrade pip
@@ -141,7 +138,7 @@ python3 -c "import cv2, mediapipe, flask, hidapi, evdev, numpy" 2>/dev/null || {
 
 # Check camera access
 echo "Checking camera access..."
-if ! python3 -c "import cv2; cap = cv2.VideoCapture(0); print('Camera available' if cap.isOpened() else 'No camera found'); cap.release()" | grep -q "Camera available"; then
+if ! python3 -c "from picamera2 import Picamera2; picam2 = Picamera2(); print('Camera available' if picam2.sensor_modes else 'No camera found')" | grep -q "Camera available"; then
     echo "❌ No camera detected. Please check your camera connection."
     exit 1
 fi
