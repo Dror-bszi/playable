@@ -11,6 +11,13 @@ from remote.device_merger import start_device_merging
 from ui import controller_bluetooth
 from ui.controller_live_status import start_controller_monitor, get_status
 import json
+from core.threshold_manager import (
+    get_delta_threshold,
+    set_delta_threshold,
+    get_min_normalized_raise,
+    set_min_normalized_raise
+)
+
 # ─── Create Flask App Immediately ───────────────────────────
 app = Flask(__name__)
 
@@ -29,9 +36,6 @@ play_mode = False
 shared_frame = None
 frame_lock = threading.Lock()
 
-# Thresholds for live tuning
-delta_threshold = 0.05
-min_normalized_raise = 0.05
 
 # Live elbow value tracking
 current_elbow_raise = 0.0
@@ -46,20 +50,6 @@ def update_current_elbow_raise(value):
 
 def get_current_elbow_raise():
     return current_elbow_raise
-
-def get_delta_threshold():
-    return delta_threshold
-
-def set_delta_threshold(value):
-    global delta_threshold
-    delta_threshold = value
-
-def get_min_normalized_raise():
-    return min_normalized_raise
-
-def set_min_normalized_raise(value):
-    global min_normalized_raise
-    min_normalized_raise = value
 
 def set_camera_index(index):
     global camera_index
