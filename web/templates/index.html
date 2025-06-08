@@ -28,37 +28,21 @@
     <h2>📷 Live Camera Preview</h2>
     <img src="/video_feed" width="640" height="480" alt="Live camera feed">
     <br><br>
-    
-    Threshold Adjustment First
+
+    <!-- Threshold Adjustment -->
     <h2>⚡ Threshold Settings</h2>
-
-    <form action="/adjust_threshold" method="post" style="display:inline;">
-        <input type="hidden" name="type" value="delta_increase">
-        <button type="submit">➕ Increase Δ Threshold</button>
-    </form>
-
-    <form action="/adjust_threshold" method="post" style="display:inline;">
-        <input type="hidden" name="type" value="delta_decrease">
-        <button type="submit">➖ Decrease Δ Threshold</button>
-    </form>
+    
+    <button onclick="adjustThreshold('delta_increase')">➕ Increase Δ Threshold</button>
+    <button onclick="adjustThreshold('delta_decrease')">➖ Decrease Δ Threshold</button>
+    <br><br>
+    <button onclick="adjustThreshold('raise_increase')">⬆️ Increase Raise Minimum</button>
+    <button onclick="adjustThreshold('raise_decrease')">⬇️ Decrease Raise Minimum</button>
 
     <br><br>
 
-    <form action="/adjust_threshold" method="post" style="display:inline;">
-        <input type="hidden" name="type" value="raise_increase">
-        <button type="submit">⬆️ Increase Raise Minimum</button>
-    </form>
-
-    <form action="/adjust_threshold" method="post" style="display:inline;">
-        <input type="hidden" name="type" value="raise_decrease">
-        <button type="submit">⬇️ Decrease Raise Minimum</button>
-    </form>
-
-    <br><br> 
-
     <!-- Current Threshold Display -->
-    <h3>Current Δ Threshold: {{ current_delta }}</h3>
-    <h3>Current Raise Minimum: {{ current_raise }}</h3> 
+    <h3>Current Δ Threshold: <span id="delta-val">{{ current_delta }}</span></h3>
+    <h3>Current Raise Minimum: <span id="raise-val">{{ current_raise }}</span></h3> 
 
     <br><hr><br>
 
@@ -68,26 +52,26 @@
     <a href="/controller_mapping" class="button-link">🖐️ Gesture Mapping</a>
     <a href="/ps5_setup" class="button-link">🕹️ PS5 Remote Setup</a>
 
-    <br><br>
-
-    <!-- Merge Button -->
-    <!-- <form action="/start_merge" method="post">
-        <button type="submit">🔵 Start Merge</button>
-    </form>
-
-    <br> -->
-
-    <!-- Play Button -->
-    <!-- <form action="/start_play" method="post">
-        <button type="submit" style="background-color: #1e90ff; color: white;">▶️ Play</button>
-    </form>
-
-    <br> -->
-
-    <!-- Shutdown Button -->
-    <!-- <form action="/shutdown" method="post">
-        <button type="submit" style="background-color: #ff4d4d; color: white;">🔴 Shut Down</button>
-    </form> -->
+    <script>
+        function adjustThreshold(type) {
+            fetch("/adjust_threshold", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded"
+                },
+                body: `type=${type}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("delta-val").textContent = data.new_delta.toFixed(3);
+                document.getElementById("raise-val").textContent = data.new_raise.toFixed(3);
+            })
+            .catch(err => {
+                alert("Failed to update threshold.");
+                console.error(err);
+            });
+        }
+    </script>
 
 </body>
 </html>
