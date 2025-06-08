@@ -35,37 +35,7 @@ def find_working_camera():
     except Exception as e:
         print(f"❌ ERROR: Failed to initialize Picamera2: {e}")
         return None
-
-# --- Camera Worker (for Web GUI) ---
-# def camera_worker():
-#     while not should_shutdown():
-#         try:
-#             frame = cv2.cvtColor(picam2.capture_array(), cv2.COLOR_RGB2BGR)
-#             with frame_lock:
-#                 set_shared_frame(frame.copy())
-#                 time.sleep(0.03)
-#         except Exception as e:
-#             print(f"[WARN] Failed to capture frame in camera_worker: {e}")
-#             time.sleep(0.1)
-
-# Adjustable global thresholds
-delta_threshold = 0.05
-min_normalized_raise = 0.05
-
-def set_delta_threshold(value):
-    global delta_threshold
-    delta_threshold = value
-
-def get_delta_threshold():
-    return delta_threshold
-
-def set_min_normalized_raise(value):
-    global min_normalized_raise
-    min_normalized_raise = value
-
-def get_min_normalized_raise():
-    return min_normalized_raise
-
+    
 # --- Gesture Detection Loop (Real-Time) ---
 def gesture_detection_loop():
     try:

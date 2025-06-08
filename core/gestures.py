@@ -5,7 +5,7 @@ import time
 from web.server import update_current_elbow_raise  # 🛠 Corrected import!
 
 # --- Import thresholds from main.py (or fallback for testing) ---
-from main import get_delta_threshold, get_min_normalized_raise
+from core.threshold_manager import get_delta_threshold, get_min_normalized_raise
 
 # --- Default Gestures ---
 default_gestures = [
