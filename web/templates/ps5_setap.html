@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>PlayAble - PS5 Setup</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f0f0f0; padding: 2em; text-align: center; }
+        form { background: white; padding: 2em; display: inline-block; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        input[type="text"] { padding: 0.6em; width: 300px; margin-bottom: 1em; border: 1px solid #ccc; border-radius: 4px; }
+        button { padding: 0.6em 1.2em; font-size: 1rem; border: none; border-radius: 6px; background-color: #1e90ff; color: white; cursor: pointer; }
+        button:hover { background-color: #007acc; }
+        .error { color: red; }
+        .info { color: green; margin-top: 1em; }
+    </style>
+</head>
+<body>
+
+    <h1>🎮 Connect to Your PS5</h1>
+
+    <form method="post">
+        <div><input type="text" name="account_id" placeholder="PSN Account ID" required></div>
+        <div><input type="text" name="console_id" placeholder="Console ID (Host ID)" required></div>
+        <div><input type="text" name="pin" placeholder="Pairing PIN (from PS5)" required></div>
+        <div><input type="text" name="name" placeholder="Device Name (optional)"></div>
+
+        <button type="submit">🔗 Connect Now</button>
+    </form>
+
+    <div class="info">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <p class="{{ category }}">{{ message }}</p>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+    </div>
+
+    <br><br>
+    <a href="/" style="text-decoration: none; color: #007bff;">&larr; Back to Dashboard</a>
+
+</body>
+</html>

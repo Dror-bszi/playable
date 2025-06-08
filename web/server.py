@@ -1,5 +1,5 @@
 # web/server.py
-from flask import Flask, render_template, request, redirect, url_for, Response, jsonify
+from flask import Flask, render_template, request, redirect, url_for, Response, jsonify,flash
 import threading
 import cv2
 import time
@@ -10,7 +10,7 @@ from logging.handlers import RotatingFileHandler
 from remote.device_merger import start_device_merging
 from ui import controller_bluetooth
 from ui.controller_live_status import start_controller_monitor, get_status
-
+import json
 # ─── Create Flask App Immediately ───────────────────────────
 app = Flask(__name__)
 
@@ -218,6 +218,51 @@ def start_merge():
         set_web_status(f"❌ Error: {str(e)}")
 
     return redirect(url_for('dashboard'))
+# Add this near other Flask routes
+@app.route("/ps5_setup", methods=["GET", "POST"])
+def ps5_setup():
+    if request.method == "POST":
+        account_id = request.form.get("account_id")
+        console_id = request.form.get("console_id")
+        pin = request.form.get("pin")
+        name = request.form.get("name") or "PlayAble"
+
+        if not all([account_id, console_id, pin]):
+            flash("All fields are required.", "error")
+            return redirect(url_for("ps5_setup"))
+
+        # Save the config file
+        auth_data = {
+            "account_id": account_id,
+            "console_id": console_id,
+            "pin": pin,
+            "name": name
+        }
+        os.makedirs("remote", exist_ok=True)
+        with open("remote/auth.json", "w") as f:
+            json.dump(auth_data, f)
+
+        # Start pairing thread
+        threading.Thread(target=start_chiaki_pair, args=(auth_data,), daemon=True).start()
+        flash("🕹 Attempting to connect to PS5 via Chiaki...", "info")
+        return redirect(url_for("dashboard"))
+
+    return render_template("ps5_setup.html")
+
+
+def start_chiaki_pair(auth):
+    try:
+        cmd = [
+            "/home/oren/Chiaki/build/gui/chiaki", "run",
+            "--account-id", auth["account_id"],
+            "--host-id", auth["console_id"],
+            "--pin", auth["pin"],
+            "--name", auth["name"]
+        ]
+        subprocess.run(cmd, check=True)
+        print("[CHIaki] PS5 Remote session started.")
+    except Exception as e:
+        print(f"[ERROR] Failed to start Chiaki session: {e}")
 
 # ─── Run Server ─────────────────────────────────────────────
 def run_server():
