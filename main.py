@@ -6,6 +6,7 @@ import cv2
 # --- NEW CAMERA (Picamera2) ---
 from picamera2 import Picamera2
 import numpy as np
+import libcamera
 
 from core.gestures import GestureDetector, default_gestures
 from remote.output_bridge import press_button
@@ -25,28 +26,80 @@ picam2 = None
 def find_working_camera():
     global picam2
     try:
+        # First, check if camera is detected
+        print("[INFO] Checking for camera...")
         picam2 = Picamera2()
-        picam2.preview_configuration.main.size = (640, 480)
-        picam2.preview_configuration.main.format = "RGB888"
-        picam2.configure("preview")
+        
+        # List available camera configurations
+        print("[INFO] Available camera configurations:")
+        for i, config in enumerate(picam2.sensor_modes):
+            print(f"  Mode {i}: {config}")
+            
+        if not picam2.sensor_modes:
+            print("❌ ERROR: No camera detected. Please check your camera connection.")
+            return None
+            
+        # Configure for AI camera with optimized settings
+        config = picam2.create_preview_configuration(
+            main={"size": (640, 480), "format": "RGB888"},
+            lores={"size": (320, 240), "format": "YUV420"},
+            encode="main"
+        )
+        
+        # Enable AI camera features
+        config["transform"] = libcamera.Transform(hflip=1, vflip=1)  # Flip if needed
+        
+        # Configure the camera
+        picam2.configure(config)
+        
+        # Start the camera
         picam2.start()
-        print("[INFO] AI Camera initialized via Picamera2.")
-        return 0  # camera index is irrelevant now
+        
+        # Verify camera is working
+        try:
+            test_frame = picam2.capture_array()
+            if test_frame is not None:
+                print("[INFO] AI Camera initialized successfully.")
+                return 0
+            else:
+                print("❌ ERROR: Camera initialized but failed to capture frame.")
+                return None
+        except Exception as e:
+            print(f"❌ ERROR: Camera initialized but failed to capture: {e}")
+            return None
+            
     except Exception as e:
-        print(f"❌ ERROR: Failed to initialize Picamera2: {e}")
+        print(f"❌ ERROR: Failed to initialize camera: {e}")
+        print("Please check:")
+        print("1. Camera is properly connected")
+        print("2. Camera is enabled in raspi-config")
+        print("3. You have the correct permissions")
+        print("4. The camera ribbon cable is properly seated")
         return None
 
 # --- Camera Worker (for Web GUI) ---
-# def camera_worker():
-#     while not should_shutdown():
-#         try:
-#             frame = cv2.cvtColor(picam2.capture_array(), cv2.COLOR_RGB2BGR)
-#             with frame_lock:
-#                 set_shared_frame(frame.copy())
-#                 time.sleep(0.03)
-#         except Exception as e:
-#             print(f"[WARN] Failed to capture frame in camera_worker: {e}")
-#             time.sleep(0.1)
+def camera_worker():
+    print("[INFO] Starting camera worker for web interface...")
+    while not should_shutdown():
+        try:
+            if picam2 is None:
+                print("[WARN] Camera not initialized in camera worker")
+                time.sleep(1)
+                continue
+                
+            frame = picam2.capture_array()
+            if frame is not None:
+                # Convert from RGB888 to BGR for OpenCV
+                frame_bgr = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+                with frame_lock:
+                    set_shared_frame(frame_bgr)
+                time.sleep(0.03)  # ~30 FPS
+            else:
+                print("[WARN] No frame captured")
+                time.sleep(0.1)
+        except Exception as e:
+            print(f"[WARN] Failed to capture frame in camera_worker: {e}")
+            time.sleep(0.1)
 
 # Adjustable global thresholds
 delta_threshold = 0.05
@@ -130,17 +183,25 @@ def gesture_detection_loop():
 
 # --- Main ---
 if __name__ == "__main__":
+    print("[INFO] Starting PlayAble...")
+    
+    # Initialize camera
     camera_index = find_working_camera()
+    if camera_index is None:
+        print("❌ ERROR: Camera initialization failed. Running in UI-only mode.")
     set_camera_index(camera_index)
 
     # Start Web server
+    print("[INFO] Starting web server...")
     threading.Thread(target=run_server, daemon=True).start()
 
     # Start gesture detection
+    print("[INFO] Starting gesture detection...")
     threading.Thread(target=gesture_detection_loop, daemon=True).start()
 
-    # Optionally enable camera worker (for video stream)
-    # threading.Thread(target=camera_worker, daemon=True).start()
+    # Start camera worker for web interface
+    print("[INFO] Starting camera worker...")
+    threading.Thread(target=camera_worker, daemon=True).start()
 
     try:
         while True:

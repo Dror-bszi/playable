@@ -10,6 +10,7 @@ from logging.handlers import RotatingFileHandler
 from remote.device_merger import start_device_merging
 from ui import controller_bluetooth
 from ui.controller_live_status import start_controller_monitor, get_status
+import numpy as np
 
 # ─── Create Flask App Immediately ───────────────────────────
 app = Flask(__name__)
@@ -137,19 +138,30 @@ def video_feed():
     def generate():
         global shared_frame
         while True:
-            with frame_lock:
-                if shared_frame is None:
-                    time.sleep(0.1)
-                    continue
-                success, buffer = cv2.imencode('.jpg', shared_frame)
+            try:
+                with frame_lock:
+                    if shared_frame is None:
+                        # Create a blank frame with "No Camera" text
+                        blank_frame = np.zeros((480, 640, 3), dtype=np.uint8)
+                        cv2.putText(blank_frame, "No Camera Feed", (200, 240), 
+                                  cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
+                        success, buffer = cv2.imencode('.jpg', blank_frame)
+                    else:
+                        success, buffer = cv2.imencode('.jpg', shared_frame)
+                
                 if not success:
                     print("[ERROR] Failed to encode frame")
+                    time.sleep(0.1)
                     continue
+                    
                 frame = buffer.tobytes()
-
-            yield (b'--frame\r\n'
-                   b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
-            time.sleep(0.1)  # Adjust frame rate as needed
+                yield (b'--frame\r\n'
+                       b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+                time.sleep(0.03)  # ~30 FPS
+            except Exception as e:
+                print(f"[ERROR] Video feed error: {e}")
+                time.sleep(0.1)
+                
     return Response(generate(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 @app.route("/controller")
